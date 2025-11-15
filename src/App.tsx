@@ -1,21 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { OnboardingFlow } from './components/OnboardingFlow';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ChoicePage } from './components/ChoicePage';
+import { UserLoginPage } from './components/UserLoginPage';
+import { OrganizerLoginPage } from './components/OrganizerLoginPage';
+import { UserOnboardingPage } from './components/UserOnboardingPage';
+import { OrganizerOnboardingPage } from './components/OrganizerOnboardingPage';
 import { UserApp } from './components/UserApp';
 import { OrganizerApp } from './components/OrganizerApp';
-import { WelcomePage } from './components/WelcomePage';
-import { AuthForm } from './components/AuthForm';
-import { AdminDashboard } from './components/AdminDashboard';
+import { AuthCallback } from './components/AuthCallback';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast';
-import { AuthCallback } from './components/AuthCallback';
-import { signIn, signUp, getCurrentSession, onAuthStateChange, getUserProfile, createUserProfile, getUserProfileByUsername, setupTestUserFriendshipAndChat } from './lib/auth';
-import { getUnreadMessageCount } from './lib/chat';
-import { getEvents, getUserBookmarkedEvents, getUserLikedEvents, getUserAttendingEvents, toggleEventBookmark, toggleEventLike, signUpForEvent, incrementEventClicks } from './lib/events';
 import { isSupabaseConfigured } from './lib/supabase';
-import { useAppStore } from './store/appStore';
 import { useToast } from './hooks/useToast';
-import type { User, Event, AuthUser, Analytics, Theme, Chat } from './types';
 
 function App() {
   const {
