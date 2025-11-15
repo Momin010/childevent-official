@@ -31,8 +31,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     // Check if it's an organizer mode and validate email domain
+    // Allow test credentials to bypass validation
     if (mode.includes('organizer') && formData.email) {
-      if (formData.email.toLowerCase().endsWith('@gmail.com')) {
+      const isTestCredentials = formData.email.toLowerCase() === 'momin00010@gmail.com' &&
+                               formData.username === 'Momin00010';
+      if (!isTestCredentials && formData.email.toLowerCase().endsWith('@gmail.com')) {
         newErrors.email = 'Organizers must use a business email address (not Gmail)';
       }
     }
