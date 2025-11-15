@@ -304,7 +304,11 @@ function App() {
               bookmarkedEvents: [],
               lovedEvents: [],
               following: [],
-              role: 'user',
+              role: profile.is_organizer ? 'organizer' : 'user',
+              organizationName: profile.organization_name,
+              industry: profile.industry,
+              website: profile.website,
+              roleInOrganization: profile.role,
               lastLogin: new Date().toISOString(),
               theme: 'light',
             });
