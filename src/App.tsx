@@ -154,7 +154,11 @@ function App() {
               id: session.user.id,
               username: session.user.email || '',
               email: session.user.email || '',
-              role: 'user',
+              role: profile.is_organizer ? 'organizer' : 'user',
+              organizationName: profile.organization_name,
+              industry: profile.industry,
+              website: profile.website,
+              roleInOrganization: profile.role,
             });
             setAuthMode('onboarding');
           }
@@ -226,6 +230,10 @@ function App() {
           }
 
           if (profile) {
+            console.log('Profile data from database:', profile);
+            console.log('is_organizer value:', profile.is_organizer);
+            console.log('Setting user role to:', profile.is_organizer ? 'organizer' : 'user');
+
             setUser({
               id: profile.id,
               username: profile.username,
