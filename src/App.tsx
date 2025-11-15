@@ -48,7 +48,17 @@ function App() {
   } = useAppStore();
 
   const [authMode, setAuthMode] = useState<'welcome' | 'signin' | 'signup' | 'organizer-signin' | 'organizer-signup' | 'onboarding' | 'feed'>('welcome');
-  const [isOrganizerOnboarding, setIsOrganizerOnboarding] = useState(false);
+  const [isOrganizerOnboarding, setIsOrganizerOnboarding] = useState(() => {
+    // Check localStorage for persisted organizer onboarding state
+    return localStorage.getItem('isOrganizerOnboarding') === 'true';
+  });
+
+  // Custom setter that also updates localStorage
+  const setIsOrganizerOnboardingWithStorage = (value: boolean | ((prev: boolean) => boolean)) => {
+    const newValue = typeof value === 'function' ? value(isOrganizerOnboarding) : value;
+    setIsOrganizerOnboarding(newValue);
+    localStorage.setItem('isOrganizerOnboarding', newValue.toString());
+  };
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -478,7 +488,7 @@ function App() {
 
           setUser(completeUser);
           setPendingUserData(null);
-          setIsOrganizerOnboarding(false);
+          setIsOrganizerOnboardingWithStorage(false);
           success('Welcome to EventConnect!', 'Your organizer profile has been created successfully.');
         } else {
           // Handle regular user onboarding
@@ -764,7 +774,7 @@ function App() {
               <AuthForm
                 mode="organizer-signup"
                 onSubmit={(credentials) => {
-                  setIsOrganizerOnboarding(true);
+                  setIsOrganizerOnboardingWithStorage(true);
                   return handleSignUp(credentials);
                 }}
                 onBack={() => setAuthMode('welcome')}
@@ -775,7 +785,7 @@ function App() {
               <AuthForm
                 mode="organizer-signin"
                 onSubmit={(credentials) => {
-                  setIsOrganizerOnboarding(true);
+                  setIsOrganizerOnboardingWithStorage(true);
                   return handleSignIn(credentials);
                 }}
                 onBack={() => setAuthMode('welcome')}
