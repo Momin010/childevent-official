@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { OnboardingFlow } from './components/OnboardingFlow';
-import { ResponsiveNavigation } from './components/ResponsiveNavigation';
-import { EventFeed } from './components/EventFeed';
+import { UserApp } from './components/UserApp';
+import { OrganizerApp } from './components/OrganizerApp';
 import { WelcomePage } from './components/WelcomePage';
 import { AuthForm } from './components/AuthForm';
-import { CalendarSection } from './components/CalendarSection';
-import { ProfileSection } from './components/ProfileSection';
-import { ChatSection } from './components/ChatSection';
-import { EventDetailsModal } from './components/EventDetailsModal';
-import { ShareModal } from './components/ShareModal';
-import { OrganizerProfile } from './components/OrganizerProfile';
 import { AdminDashboard } from './components/AdminDashboard';
-import { OrganizerDashboard } from './components/OrganizerDashboard';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast';
@@ -54,26 +47,8 @@ function App() {
     setIsOrganizerOnboarding(newValue);
     localStorage.setItem('isOrganizerOnboarding', newValue.toString());
   };
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [selectedOrganizer, setSelectedOrganizer] = useState<string | null>(null);
   const [pendingUserData, setPendingUserData] = useState<any>(null);
   const { toasts, removeToast, success, error: showError } = useToast();
-
-  // Initialize with empty events array - will be loaded from database
-  const [events, setEvents] = useState<Event[]>([]);
-  const [userBookmarks, setUserBookmarks] = useState<string[]>([]);
-  const [userLikes, setUserLikes] = useState<string[]>([]);
-  const [userAttending, setUserAttending] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (user) {
-      loadUnreadMessages();
-      loadEvents();
-      loadUserEventData();
-    }
-  }, [user]);
 
   useEffect(() => {
     if (error) {
@@ -81,42 +56,6 @@ function App() {
       clearError();
     }
   }, [error, showError, clearError]);
-
-  const loadUnreadMessages = async () => {
-    if (!user) return;
-    try {
-      const count = await getUnreadMessageCount(user.id);
-      setUnreadMessages(count);
-    } catch (error) {
-      console.error('Error loading unread messages:', error);
-    }
-  };
-
-  const loadEvents = async () => {
-    try {
-      const eventsData = await getEvents();
-      setEvents(eventsData);
-    } catch (error) {
-      console.error('Error loading events:', error);
-    }
-  };
-
-  const loadUserEventData = async () => {
-    if (!user) return;
-    try {
-      const [bookmarks, likes, attending] = await Promise.all([
-        getUserBookmarkedEvents(user.id),
-        getUserLikedEvents(user.id),
-        getUserAttendingEvents(user.id)
-      ]);
-      
-      setUserBookmarks(bookmarks);
-      setUserLikes(likes);
-      setUserAttending(attending);
-    } catch (error) {
-      console.error('Error loading user event data:', error);
-    }
-  };
 
 
   // Check if Supabase is configured
@@ -428,10 +367,6 @@ function App() {
     setAuthMode('welcome');
     setActiveTab('home');
     setPendingUserData(null);
-    setEvents([]);
-    setUserBookmarks([]);
-    setUserLikes([]);
-    setUserAttending([]);
     success('Signed Out', 'You have been successfully signed out.');
   };
 
@@ -527,154 +462,6 @@ function App() {
     }
   };
 
-  const handleEventClick = async (event: Event) => {
-    // Increment click count
-    await incrementEventClicks(event.id);
-    
-    setSelectedEvent(event);
-    setIsEventModalOpen(true);
-  };
-
-  const handleShare = (event: Event) => {
-    setSelectedEvent(event);
-    setIsShareModalOpen(true);
-  };
-
-  const handleBookmark = async (eventId: string) => {
-    if (user) {
-      try {
-        const isBookmarked = await toggleEventBookmark(eventId, user.id);
-        if (isBookmarked) {
-          setUserBookmarks(prev => [...prev, eventId]);
-        } else {
-          setUserBookmarks(prev => prev.filter(id => id !== eventId));
-        }
-      } catch (error) {
-        console.error('Error toggling bookmark:', error);
-      }
-    }
-  };
-
-  const handleLike = async (eventId: string) => {
-    if (user) {
-      try {
-        const isLiked = await toggleEventLike(eventId, user.id);
-        if (isLiked) {
-          setUserLikes(prev => [...prev, eventId]);
-        } else {
-          setUserLikes(prev => prev.filter(id => id !== eventId));
-        }
-        // Reload events to get updated like counts
-        await loadEvents();
-      } catch (error) {
-        console.error('Error toggling like:', error);
-      }
-    }
-  };
-
-  const handleSignUpForEvent = async (eventId: string) => {
-    if (user) {
-      try {
-        await signUpForEvent(eventId, user.id);
-        setUserAttending(prev => [...prev, eventId]);
-        // Reload events to get updated attendance counts
-        await loadEvents();
-        success('Event Booked', 'You have successfully signed up for this event!');
-      } catch (error) {
-        console.error('Error signing up for event:', error);
-        showError('Error', 'Failed to sign up for event');
-      }
-    }
-  };
-
-  const handleFollowOrganizer = (organizerId: string) => {
-    if (user) {
-      setUser({
-        ...user,
-        following: user.following.includes(organizerId)
-          ? user.following.filter(id => id !== organizerId)
-          : [...user.following, organizerId]
-      });
-    }
-  };
-
-  const handleOrganizerClick = (organizerId: string) => {
-    setSelectedOrganizer(organizerId);
-    setActiveTab('organizer');
-  };
-
-  const handleComment = (eventId: string) => {
-    console.log('Comment on event:', eventId);
-  };
-
-  const renderContent = () => {
-    if (user?.role === 'organizer' && activeTab === 'home') {
-      return <OrganizerDashboard />;
-    }
-
-    if (user?.role === 'admin' && activeTab === 'home') {
-      return <AdminDashboard analytics={analytics} />;
-    }
-
-    if (selectedOrganizer) {
-      const organizer = events.find(event => event.organizer.id === selectedOrganizer)?.organizer;
-      const organizerEvents = events.filter(event => event.organizer.id === selectedOrganizer);
-      
-      if (organizer) {
-        return (
-          <OrganizerProfile
-            organizer={organizer}
-            organizerEvents={organizerEvents}
-            isFollowing={user?.following.includes(organizer.id) || false}
-            onFollow={handleFollowOrganizer}
-            onBack={() => setSelectedOrganizer(null)}
-          />
-        );
-      }
-    }
-
-    switch (activeTab) {
-      case 'home':
-        return (
-          <EventFeed
-            events={events}
-            onEventClick={handleEventClick}
-            onLike={handleLike}
-            onBookmark={handleBookmark}
-            onComment={handleComment}
-            onShare={handleShare}
-            onOrganizerClick={handleOrganizerClick}
-            bookmarkedEvents={userBookmarks}
-            lovedEvents={userLikes}
-          />
-        );
-      case 'calendar':
-        return (
-          <CalendarSection
-            events={events.filter(event => userAttending.includes(event.id))}
-            onEventClick={handleEventClick}
-          />
-        );
-      case 'chat':
-        return user ? <ChatSection user={user} /> : null;
-      case 'profile':
-        if (user) {
-          return (
-            <ProfileSection
-              user={user}
-              bookedEvents={events.filter(event => userAttending.includes(event.id))}
-              attendedEvents={[]} // Past events would be filtered by date
-              onUpdateProfile={(updates) => setUser({ ...user, ...updates })}
-              onSignOut={handleSignOut}
-            />
-          );
-        }
-        return null;
-      default:
-        return null;
-    }
-  };
-
   // Handle OAuth callback
   if (window.location.pathname === '/auth/callback') {
     return <AuthCallback />;
@@ -705,38 +492,11 @@ function App() {
 
         {/* Main Content */}
         {user ? (
-          <>
-            <div className="md:ml-16">
-              {renderContent()}
-            </div>
-            <ResponsiveNavigation
-              activeTab={activeTab}
-              onTabChange={(tab) => {
-                setActiveTab(tab);
-                setSelectedOrganizer(null);
-              }}
-              unreadMessages={unreadMessages}
-            />
-            {selectedEvent && (
-              <>
-                <EventDetailsModal
-                  event={selectedEvent}
-                  isOpen={isEventModalOpen}
-                  onClose={() => setIsEventModalOpen(false)}
-                  onShare={handleShare}
-                  onFollow={handleFollowOrganizer}
-                  onSignUp={handleSignUpForEvent}
-                  currentUser={user}
-                />
-                <ShareModal
-                  event={selectedEvent}
-                  isOpen={isShareModalOpen}
-                  onClose={() => setIsShareModalOpen(false)}
-                />
-              </>
-            )}
-
-          </>
+          user.role === 'organizer' ? (
+            <OrganizerApp user={user} onSignOut={handleSignOut} />
+          ) : (
+            <UserApp user={user} onSignOut={handleSignOut} />
+          )
         ) : (
           <>
             {/* Auth Flow */}
