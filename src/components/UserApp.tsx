@@ -11,16 +11,19 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { ToastContainer } from './Toast';
 import { getUnreadMessageCount } from '../lib/chat';
 import { getEvents, getUserBookmarkedEvents, getUserLikedEvents, getUserAttendingEvents, toggleEventBookmark, toggleEventLike, signUpForEvent, incrementEventClicks } from '../lib/events';
+import { getCurrentSession, getUserProfile } from '../lib/auth';
 import { useAppStore } from '../store/appStore';
 import { useToast } from '../hooks/useToast';
 import type { User, Event } from '../types';
 
 interface UserAppProps {
-  user: User;
+  user?: User;
   onSignOut: () => void;
 }
 
-export const UserApp: React.FC<UserAppProps> = ({ user, onSignOut }) => {
+export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }) => {
+  const [user, setUser] = useState<User | null>(initialUser || null);
+  const [loading, setLoading] = useState(!initialUser);
   const {
     activeTab,
     setActiveTab,
@@ -41,10 +44,51 @@ export const UserApp: React.FC<UserAppProps> = ({ user, onSignOut }) => {
   const [userAttending, setUserAttending] = useState<string[]>([]);
 
   useEffect(() => {
-    loadUnreadMessages();
-    loadEvents();
-    loadUserEventData();
-  }, []);
+    if (!user && !loading) {
+      loadUser();
+    } else if (user) {
+      loadUnreadMessages();
+      loadEvents();
+      loadUserEventData();
+    }
+  }, [user, loading]);
+
+  const loadUser = async () => {
+    try {
+      setLoading(true);
+      const session = await getCurrentSession();
+      if (session?.user) {
+        const profile = await getUserProfile(session.user.id);
+        if (profile && !profile.is_organizer) {
+          setUser({
+            id: profile.id,
+            username: profile.username,
+            name: profile.name,
+            age: profile.age,
+            isParent: profile.is_parent,
+            numberOfChildren: profile.number_of_children,
+            hobbies: profile.hobbies,
+            profilePicture: profile.profile_picture,
+            coverPhoto: profile.cover_photo,
+            bio: profile.bio,
+            friends: [],
+            bookedEvents: [],
+            attendedEvents: [],
+            bookmarkedEvents: [],
+            lovedEvents: [],
+            following: [],
+            role: 'user',
+            lastLogin: new Date().toISOString(),
+            theme: 'light',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadUnreadMessages = async () => {
     try {
@@ -215,9 +259,16 @@ export const UserApp: React.FC<UserAppProps> = ({ user, onSignOut }) => {
     }
   };
 
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading..." />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
-      {/* Loading Overlay */}
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onClose={removeToast} />
 

@@ -6,16 +6,19 @@ import { ChatSection } from './ChatSection';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ToastContainer } from './Toast';
 import { getUnreadMessageCount } from '../lib/chat';
+import { getCurrentSession, getUserProfile } from '../lib/auth';
 import { useAppStore } from '../store/appStore';
 import { useToast } from '../hooks/useToast';
 import type { User } from '../types';
 
 interface OrganizerAppProps {
-  user: User;
+  user?: User;
   onSignOut: () => void;
 }
 
-export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user, onSignOut }) => {
+export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, onSignOut }) => {
+  const [user, setUser] = useState<User | null>(initialUser || null);
+  const [loading, setLoading] = useState(!initialUser);
   const {
     activeTab,
     setActiveTab,
@@ -26,8 +29,47 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user, onSignOut }) =
   const { toasts, removeToast } = useToast();
 
   useEffect(() => {
-    loadUnreadMessages();
-  }, []);
+    if (!user && !loading) {
+      loadUser();
+    } else if (user) {
+      loadUnreadMessages();
+    }
+  }, [user, loading]);
+
+  const loadUser = async () => {
+    try {
+      setLoading(true);
+      const session = await getCurrentSession();
+      if (session?.user) {
+        const profile = await getUserProfile(session.user.id);
+        if (profile && profile.is_organizer) {
+          setUser({
+            id: profile.id,
+            username: profile.username,
+            name: profile.name,
+            organizationName: profile.organization_name,
+            industry: profile.industry,
+            website: profile.website,
+            roleInOrganization: profile.role,
+            friends: [],
+            bookedEvents: [],
+            attendedEvents: [],
+            bookmarkedEvents: [],
+            lovedEvents: [],
+            following: [],
+            role: 'organizer',
+            organizerId: profile.organizer_id,
+            lastLogin: new Date().toISOString(),
+            theme: 'light',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading organizer:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadUnreadMessages = async () => {
     try {
@@ -58,6 +100,14 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user, onSignOut }) =
         return <OrganizerDashboard />;
     }
   };
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading..." />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
