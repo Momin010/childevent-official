@@ -117,9 +117,11 @@ function App() {
             if (username && (username === 'tester1' || username === 'tester2')) {
               profile = await getUserProfileByUsername(username);
             } else {
+              console.log('Getting profile for user ID:', session.user.id);
               profile = await getUserProfile(session.user.id);
+              console.log('Profile lookup result:', profile);
             }
-            
+
             if (profile) {
               setUser({
                 id: profile.id,
@@ -275,6 +277,7 @@ function App() {
             setAuthMode('onboarding');
           }
         } catch (error) {
+          console.error('Profile lookup failed:', error);
           // Profile doesn't exist, redirect to onboarding
           setPendingUserData({
             id: authUser.id,
