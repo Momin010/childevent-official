@@ -344,7 +344,7 @@ function App() {
       setLoading(true);
 
       // Check for test organizer credentials
-      if (username === 'Momin00010' && email === 'momin00010@gmail.com' && password === 'Momin00010!') {
+      if (email === 'momin00010@gmail.com' && password === 'Momin00010!') {
         // Create a mock organizer user
         setUser({
           id: 'test-organizer-123',
