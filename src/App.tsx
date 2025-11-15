@@ -388,7 +388,7 @@ function App() {
               bookmarkedEvents: [],
               lovedEvents: [],
               following: [],
-              role: 'user',
+              role: profile.is_organizer ? 'organizer' : 'user',
               lastLogin: new Date().toISOString(),
               theme: 'light',
             });

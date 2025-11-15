@@ -105,58 +105,56 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
         </div>
       </div>
 
-      {/* Profile Picture and Actions */}
+      {/* Profile Picture */}
       <div className="max-w-5xl mx-auto px-4 relative">
-        <div className="flex justify-between items-start mt-4">
-          <div
-            {...getProfilePicProps()}
-            className="absolute -top-16 left-4 w-32 h-32 rounded-full border-4 border-white bg-gray-200 cursor-pointer group overflow-hidden"
-          >
-            {user.profilePicture ? (
-              <img
-                src={user.profilePicture}
-                alt={user.name}
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Users className="w-12 h-12 text-gray-400" />
-              </div>
-            )}
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
-              <input {...getProfilePicInputProps()} />
-              <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
+        <div
+          {...getProfilePicProps()}
+          className="absolute -top-16 left-4 w-32 h-32 rounded-full border-4 border-white bg-gray-200 cursor-pointer group overflow-hidden"
+        >
+          {user.profilePicture ? (
+            <img
+              src={user.profilePicture}
+              alt={user.name}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Users className="w-12 h-12 text-gray-400" />
             </div>
-          </div>
-
-          <div className="flex space-x-4 mt-4">
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg flex items-center space-x-2 hover:bg-red-600 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Sign Out</span>
-            </button>
+          )}
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
+            <input {...getProfilePicInputProps()} />
+            <Camera className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-all duration-200" />
           </div>
         </div>
 
         {/* User Info */}
         <div className="pt-20 pb-4 border-b">
-          <div>
-            <h1 className="text-3xl font-bold">{user.name}</h1>
-            <p className="text-gray-600">{user.bio || 'No bio yet'}</p>
-          </div>
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold">{user.name}</h1>
+              <p className="text-gray-600">{user.bio || 'No bio yet'}</p>
 
-          <div className="flex space-x-4 mt-4">
-            <div className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-gray-500" />
-              <span>{user.friends.length} Friends</span>
+              <div className="flex space-x-4 mt-4">
+                <div className="flex items-center space-x-2">
+                  <Users className="w-5 h-5 text-gray-500" />
+                  <span>{user.friends.length} Friends</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-5 h-5 text-gray-500" />
+                  <span>{bookedEvents.length} Upcoming Events</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-gray-500" />
-              <span>{bookedEvents.length} Upcoming Events</span>
-            </div>
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg flex items-center space-x-2 hover:bg-red-600 transition-colors ml-4"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Sign Out</span>
+            </button>
           </div>
         </div>
 
