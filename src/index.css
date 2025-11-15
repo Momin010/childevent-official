@@ -1,0 +1,170 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --theme-background: #ffffff;
+  --theme-text: #1f2937;
+  --theme-primary: #3b82f6;
+  --theme-secondary: #6b7280;
+  --theme-accent: #2563eb;
+  --theme-buttonText: #ffffff;
+  --theme-buttonBackground: #3b82f6;
+  --theme-buttonHover: #2563eb;
+  --theme-cardBackground: #ffffff;
+  --theme-borderColor: #e5e7eb;
+}
+
+body {
+  background: var(--theme-background);
+  color: var(--theme-text);
+}
+
+.btn-primary {
+  background-color: var(--theme-buttonBackground);
+  color: var(--theme-buttonText);
+}
+
+.btn-primary:hover {
+  background-color: var(--theme-buttonHover);
+}
+
+.card {
+  background-color: var(--theme-cardBackground);
+  border-color: var(--theme-borderColor);
+}
+
+/* Calendar Styles */
+.react-calendar {
+  width: 100%;
+  max-width: 100%;
+  background: var(--theme-cardBackground);
+  border: 1px solid var(--theme-borderColor);
+  font-family: inherit;
+  line-height: 1.125em;
+  color: var(--theme-text);
+}
+
+.react-calendar__navigation {
+  display: flex;
+  height: 44px;
+  margin-bottom: 1em;
+}
+
+.react-calendar__navigation button {
+  min-width: 44px;
+  background: none;
+  font-size: 16px;
+  color: var(--theme-text);
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: var(--theme-borderColor);
+  border-radius: 8px;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 0.75em;
+  color: var(--theme-secondary);
+}
+
+.react-calendar__month-view__days__day {
+  padding: 0.75em;
+  color: var(--theme-text);
+}
+
+.react-calendar__tile {
+  max-width: 100%;
+  padding: 10px 6.6667px;
+  background: none;
+  text-align: center;
+  line-height: 16px;
+  font: inherit;
+  border-radius: 8px;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: var(--theme-borderColor);
+}
+
+.react-calendar__tile--now {
+  background: #dbeafe;
+}
+
+.react-calendar__tile--active {
+  background: var(--theme-primary);
+  color: var(--theme-buttonText);
+}
+
+.react-calendar__tile.has-events {
+  background-color: #93c5fd;
+  color: var(--theme-buttonText);
+}
+
+.react-calendar__tile.has-events:enabled:hover,
+.react-calendar__tile.has-events:enabled:focus {
+  background: #60a5fa;
+}
+
+/* Smooth transitions */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+}
+
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+}
+
+/* Smooth page transitions */
+.page-transition {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button hover transitions */
+.btn-transition {
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-transition:hover {
+  transform: translateY(-1px);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}

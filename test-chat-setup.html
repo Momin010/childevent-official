@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Test Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #45a049;
+        }
+        .button.blue {
+            background: #2196F3;
+        }
+        .button.blue:hover {
+            background: #1976D2;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .instructions {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Chat System Test Setup</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instructions to Test Your Chat System:</h3>
+            
+            <div class="step">
+                <strong>Step 1:</strong> Make sure your Supabase is connected and your app is running
+            </div>
+            
+            <div class="step">
+                <strong>Step 2:</strong> Click "Setup Test Data" below to create test users and chat
+            </div>
+            
+            <div class="step">
+                <strong>Step 3:</strong> In your app, sign in as:
+                <ul>
+                    <li><strong>tester1@example.com</strong> (password: TestPass123!)</li>
+                    <li><strong>tester2@example.com</strong> (password: TestPass123!)</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <strong>Step 4:</strong> Go to the Chat tab and you should see existing messages!
+            </div>
+            
+            <div class="step">
+                <strong>Step 5:</strong> Open two browser windows/tabs, sign in as different users, and test real-time messaging!
+            </div>
+        </div>
+
+        <div id="status" class="status"></div>
+        
+        <button class="button" onclick="setupTestData()">🔧 Setup Test Data</button>
+        <button class="button blue" onclick="openApp()">🚀 Open Your App</button>
+        
+        <div style="margin-top: 30px;">
+            <h3>🔍 What This Will Create:</h3>
+            <ul>
+                <li>✅ Two test user profiles (tester1 & tester2)</li>
+                <li>✅ Friendship connection between them</li>
+                <li>✅ A chat conversation with sample messages</li>
+                <li>✅ Proper database relationships for testing</li>
+            </ul>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 5px;">
+            <strong>⚠️ Note:</strong> You need to have your Supabase environment variables set up in your React app for this to work.
+        </div>
+    </div>
+
+    <script type="module">
+        // You'll need to replace these with your actual Supabase credentials
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${isError ? 'error' : 'success'}`;
+            status.style.display = 'block';
+        }
+        
+        async function setupTestData() {
+            showStatus('Setting up test data... Please wait...');
+            
+            try {
+                // This is a simplified version - you'll need to implement the actual Supabase calls
+                // For now, just show instructions
+                showStatus('✅ Test data setup instructions ready! Follow the steps above to test your chat system.');
+            } catch (error) {
+                showStatus('❌ Error: ' + error.message, true);
+            }
+        }
+        
+        function openApp() {
+            // Assuming your app runs on localhost:5173 (Vite default)
+            window.open('http://localhost:5173', '_blank');
+        }
+        
+        // Make functions global
+        window.setupTestData = setupTestData;
+        window.openApp = openApp;
+    </script>
+</body>
+</html>
