@@ -4,14 +4,19 @@ import { ChevronRight, PartyPopper, Users, Heart, User } from 'lucide-react';
 interface OnboardingFlowProps {
   onComplete: (userData: {
     name: string;
-    age: number;
-    isParent: boolean;
-    numberOfChildren: number;
-    hobbies: string[];
+    age?: number;
+    isParent?: boolean;
+    numberOfChildren?: number;
+    hobbies?: string[];
+    industry?: string;
+    organizationName?: string;
+    website?: string;
+    role?: string;
   }) => void;
+  isOrganizer?: boolean;
 }
 
-const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
+const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, isOrganizer = false }) => {
   const [step, setStep] = useState(1);
   const [userData, setUserData] = useState({
     name: '',
@@ -19,42 +24,155 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     isParent: false,
     numberOfChildren: 0,
     hobbies: [] as string[],
+    industry: '',
+    organizationName: '',
+    website: '',
+    role: '',
   });
 
-  const totalSteps = 4;
+  const totalSteps = isOrganizer ? 4 : 4;
   const progress = (step / totalSteps) * 100;
 
   const handleNext = () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
-      // Convert age to number and ensure it's valid
-      const age = parseInt(userData.age, 10);
-      if (isNaN(age)) {
-        alert('Please enter a valid age');
-        return;
-      }
-      
-      // Validate required fields
-      if (!userData.name.trim()) {
-        alert('Please enter your name');
-        return;
-      }
-      
-      if (userData.hobbies.length === 0) {
-        alert('Please select at least one hobby');
-        return;
-      }
+      if (isOrganizer) {
+        // Validate organizer fields
+        if (!userData.organizationName.trim()) {
+          alert('Please enter your organization name');
+          return;
+        }
+        if (!userData.industry) {
+          alert('Please select an industry');
+          return;
+        }
+        if (!userData.role.trim()) {
+          alert('Please enter your role');
+          return;
+        }
 
-      // Call onComplete with the validated data
-      onComplete({
-        ...userData,
-        age,
-      });
+        onComplete({
+          organizationName: userData.organizationName,
+          industry: userData.industry,
+          website: userData.website,
+          role: userData.role,
+        });
+      } else {
+        // Convert age to number and ensure it's valid
+        const age = parseInt(userData.age, 10);
+        if (isNaN(age)) {
+          alert('Please enter a valid age');
+          return;
+        }
+
+        // Validate required fields
+        if (!userData.name.trim()) {
+          alert('Please enter your name');
+          return;
+        }
+
+        if (userData.hobbies.length === 0) {
+          alert('Please select at least one hobby');
+          return;
+        }
+
+        // Call onComplete with the validated data
+        onComplete({
+          ...userData,
+          age,
+        });
+      }
     }
   };
 
   const renderStep = () => {
+    if (isOrganizer) {
+      switch (step) {
+        case 1:
+          return (
+            <div className="space-y-4">
+              <User className="w-12 h-12 text-blue-500 mx-auto" />
+              <h2 className="text-2xl font-bold text-center">Organization Name</h2>
+              <input
+                type="text"
+                value={userData.organizationName}
+                onChange={(e) => setUserData({ ...userData, organizationName: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter your organization name"
+              />
+            </div>
+          );
+        case 2:
+          const industries = [
+            'Education',
+            'Healthcare',
+            'Technology',
+            'Non-profit',
+            'Entertainment',
+            'Sports',
+            'Arts & Culture',
+            'Food & Beverage',
+            'Retail',
+            'Manufacturing',
+            'Finance',
+            'Real Estate',
+            'Other'
+          ];
+          return (
+            <div className="space-y-4">
+              <PartyPopper className="w-12 h-12 text-blue-500 mx-auto" />
+              <h2 className="text-2xl font-bold text-center">What industry are you in?</h2>
+              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                {industries.map((industry) => (
+                  <button
+                    key={industry}
+                    onClick={() => setUserData({ ...userData, industry })}
+                    className={`py-2 px-4 rounded-lg ${
+                      userData.industry === industry
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {industry}
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        case 3:
+          return (
+            <div className="space-y-4">
+              <Users className="w-12 h-12 text-blue-500 mx-auto" />
+              <h2 className="text-2xl font-bold text-center">Website (optional)</h2>
+              <input
+                type="url"
+                value={userData.website}
+                onChange={(e) => setUserData({ ...userData, website: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="https://yourwebsite.com"
+              />
+            </div>
+          );
+        case 4:
+          return (
+            <div className="space-y-4">
+              <Heart className="w-12 h-12 text-blue-500 mx-auto" />
+              <h2 className="text-2xl font-bold text-center">Your Role</h2>
+              <input
+                type="text"
+                value={userData.role}
+                onChange={(e) => setUserData({ ...userData, role: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="e.g. Event Coordinator, Manager"
+              />
+            </div>
+          );
+        default:
+          return null;
+      }
+    }
+
     switch (step) {
       case 1:
         return (
@@ -207,9 +325,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         <button
           onClick={handleNext}
           disabled={
-            (step === 1 && !userData.name) ||
-            (step === 2 && !userData.age) ||
-            (step === 4 && userData.hobbies.length === 0)
+            isOrganizer
+              ? (step === 1 && !userData.organizationName.trim()) ||
+                (step === 2 && !userData.industry) ||
+                (step === 4 && !userData.role.trim())
+              : (step === 1 && !userData.name) ||
+                (step === 2 && !userData.age) ||
+                (step === 4 && userData.hobbies.length === 0)
           }
           className="w-full py-3 bg-blue-500 text-white rounded-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
         >

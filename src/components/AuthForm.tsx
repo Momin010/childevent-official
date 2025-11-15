@@ -5,7 +5,7 @@ import { loginSchema, signUpSchema, AUTH_ERRORS } from '../lib/auth';
 import type { LoginCredentials, SignUpCredentials } from '../lib/auth';
 
 interface AuthFormProps {
-  mode: 'signin' | 'signup';
+  mode: 'signin' | 'signup' | 'organizer-signin' | 'organizer-signup';
   onSubmit: (credentials: LoginCredentials | SignUpCredentials) => Promise<void>;
   onBack: () => void;
   error?: string;
@@ -28,16 +28,24 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Check if it's an organizer mode and validate email domain
+    if (mode.includes('organizer') && formData.email) {
+      if (formData.email.toLowerCase().endsWith('@gmail.com')) {
+        newErrors.email = 'Organizers must use a business email address (not Gmail)';
+      }
+    }
+
     try {
-      if (mode === 'signin') {
+      if (mode === 'signin' || mode === 'organizer-signin') {
         loginSchema.parse(formData);
       } else {
         signUpSchema.parse(formData);
       }
-      setErrors({});
-      return true;
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
     } catch (error: any) {
-      const newErrors: Record<string, string> = {};
       error.errors.forEach((err: any) => {
         const [field] = err.path;
         newErrors[field] = err.message;
@@ -106,7 +114,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             transition={{ delay: 0.4 }}
             className="text-3xl font-bold text-gray-900 mb-8 text-center"
           >
-            {mode === 'signin' ? 'Welcome Back!' : 'Create Account'}
+            {mode === 'signin' ? 'Welcome Back!' :
+             mode === 'organizer-signin' ? 'Organizer Sign In' :
+             mode === 'organizer-signup' ? 'Create Organizer Account' :
+             'Create Account'}
           </motion.h1>
 
           <motion.form
@@ -239,7 +250,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                mode === 'signin' ? 'Sign In' : 'Sign Up'
+                mode === 'signin' || mode === 'organizer-signin' ? 'Sign In' : 'Sign Up'
               )}
             </motion.button>
           </motion.form>

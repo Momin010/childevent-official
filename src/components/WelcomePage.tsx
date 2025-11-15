@@ -7,11 +7,13 @@ import { useToast } from '../hooks/useToast';
 interface WelcomePageProps {
   onSignUpClick: () => void;
   onSignInClick: () => void;
+  onOrganizerClick: () => void;
 }
 
 export const WelcomePage: React.FC<WelcomePageProps> = ({
   onSignUpClick,
   onSignInClick,
+  onOrganizerClick,
 }) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { error } = useToast();
@@ -132,6 +134,16 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
           className="w-full bg-transparent border-2 border-white text-white py-3 px-6 rounded-lg font-semibold hover:bg-white/10 transition-colors duration-200"
         >
           Sign In
+        </motion.button>
+
+        {/* Organizer Portal Button */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onOrganizerClick}
+          className="w-full bg-yellow-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-200 mt-4"
+        >
+          Sign Up/In as Organizer
         </motion.button>
       </motion.div>
     </motion.div>

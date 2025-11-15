@@ -11,6 +11,7 @@ import { EventDetailsModal } from './components/EventDetailsModal';
 import { ShareModal } from './components/ShareModal';
 import { OrganizerProfile } from './components/OrganizerProfile';
 import { AdminDashboard } from './components/AdminDashboard';
+import { OrganizerDashboard } from './components/OrganizerDashboard';
 import { ThemeSelector } from './components/ThemeSelector';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -46,7 +47,8 @@ function App() {
     clearError,
   } = useAppStore();
 
-  const [authMode, setAuthMode] = useState<'welcome' | 'signin' | 'signup' | 'onboarding' | 'feed'>('welcome');
+  const [authMode, setAuthMode] = useState<'welcome' | 'signin' | 'signup' | 'organizer-signin' | 'organizer-signup' | 'onboarding' | 'feed'>('welcome');
+  const [isOrganizerOnboarding, setIsOrganizerOnboarding] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -246,20 +248,46 @@ function App() {
   const handleSignIn = async ({ email, password, rememberMe }: { email: string; password: string; rememberMe?: boolean }) => {
     try {
       setLoading(true);
+
+      // Check for test organizer credentials
+      if (email === 'momin00010@gmail.com' && password === 'Momin00010!') {
+        // Create a mock organizer user
+        setUser({
+          id: 'test-organizer-123',
+          username: 'Momin00010',
+          name: 'Test Organizer',
+          organizationName: 'Test Organization',
+          industry: 'Technology',
+          website: 'https://testorg.com',
+          roleInOrganization: 'Event Coordinator',
+          friends: [],
+          bookedEvents: [],
+          attendedEvents: [],
+          bookmarkedEvents: [],
+          lovedEvents: [],
+          following: [],
+          role: 'organizer',
+          lastLogin: new Date().toISOString(),
+          theme: 'light',
+        });
+        success('Welcome back!', 'Test organizer account loaded successfully.');
+        return;
+      }
+
       const { user: authUser } = await signIn({ email, password, rememberMe });
-      
+
       if (authUser) {
         try {
           // Check if this is a test user by username
           const username = authUser.user_metadata?.username;
           let profile = null;
-          
+
           if (username && (username === 'tester1' || username === 'tester2')) {
             profile = await getUserProfileByUsername(username);
           } else {
             profile = await getUserProfile(authUser.id);
           }
-          
+
           if (profile) {
             setUser({
               id: profile.id,
@@ -289,7 +317,7 @@ function App() {
               id: authUser.id,
               username: authUser.email || '',
               email: authUser.email || '',
-              role: 'user',
+              role: isOrganizerOnboarding ? 'organizer' : 'user',
             });
             setAuthMode('onboarding');
           }
@@ -299,7 +327,7 @@ function App() {
             id: authUser.id,
             username: authUser.email || '',
             email: authUser.email || '',
-            role: 'user',
+            role: isOrganizerOnboarding ? 'organizer' : 'user',
           });
           setAuthMode('onboarding');
         }
@@ -314,7 +342,32 @@ function App() {
   const handleSignUp = async ({ email, password, username }: { email: string; password: string; username: string }) => {
     try {
       setLoading(true);
-      
+
+      // Check for test organizer credentials
+      if (username === 'Momin00010' && email === 'momin00010@gmail.com' && password === 'Momin00010!') {
+        // Create a mock organizer user
+        setUser({
+          id: 'test-organizer-123',
+          username: 'Momin00010',
+          name: 'Test Organizer',
+          organizationName: 'Test Organization',
+          industry: 'Technology',
+          website: 'https://testorg.com',
+          roleInOrganization: 'Event Coordinator',
+          friends: [],
+          bookedEvents: [],
+          attendedEvents: [],
+          bookmarkedEvents: [],
+          lovedEvents: [],
+          following: [],
+          role: 'organizer',
+          lastLogin: new Date().toISOString(),
+          theme: 'light',
+        });
+        success('Welcome!', 'Test organizer account loaded successfully.');
+        return;
+      }
+
       // For test users, check if profile already exists
       if (username === 'tester1' || username === 'tester2') {
         try {
@@ -348,15 +401,15 @@ function App() {
           console.log('Test user profile not found, proceeding with signup');
         }
       }
-      
+
       const { user: authUser } = await signUp({ email, password, username });
-      
+
       if (authUser) {
         setPendingUserData({
           id: authUser.id,
           username: authUser.email || '',
           email: authUser.email || '',
-          role: 'user',
+          role: isOrganizerOnboarding ? 'organizer' : 'user',
         });
         setAuthMode('onboarding');
         success('Account Created', 'Please complete your profile to continue.');
@@ -380,40 +433,86 @@ function App() {
     success('Signed Out', 'You have been successfully signed out.');
   };
 
-  const handleOnboardingComplete = async (userData: Omit<User, 'profilePicture' | 'id' | 'username' | 'role' | 'lastLogin' | 'theme'>) => {
+  const handleWelcomeOrganizerClick = () => {
+    setAuthMode('organizer-signup');
+  };
+
+  const handleOnboardingComplete = async (userData: any) => {
     if (pendingUserData) {
       try {
         setLoading(true);
-        const profileData = {
-          username: pendingUserData.username,
-          name: userData.name,
-          age: userData.age,
-          is_parent: userData.isParent,
-          number_of_children: userData.numberOfChildren,
-          hobbies: userData.hobbies,
-          email: pendingUserData.email,
-        };
 
-        await createUserProfile(pendingUserData.id, profileData);
+        if (isOrganizerOnboarding) {
+          // Handle organizer onboarding
+          const profileData = {
+            username: pendingUserData.username,
+            name: userData.organizationName || pendingUserData.username,
+            email: pendingUserData.email,
+            organization_name: userData.organizationName,
+            industry: userData.industry,
+            website: userData.website,
+            role: userData.role,
+            is_organizer: true,
+          };
 
-        const completeUser: User = {
-          id: pendingUserData.id,
-          username: pendingUserData.username,
-          ...userData,
-          friends: [],
-          bookedEvents: [],
-          attendedEvents: [],
-          bookmarkedEvents: [],
-          lovedEvents: [],
-          following: [],
-          role: pendingUserData.role,
-          lastLogin: new Date().toISOString(),
-          theme: 'light',
-        };
-        
-        setUser(completeUser);
-        setPendingUserData(null);
-        success('Welcome to EventConnect!', 'Your profile has been created successfully.');
+          await createUserProfile(pendingUserData.id, profileData);
+
+          const completeUser: User = {
+            id: pendingUserData.id,
+            username: pendingUserData.username,
+            name: userData.organizationName || pendingUserData.username,
+            organizationName: userData.organizationName,
+            industry: userData.industry,
+            website: userData.website,
+            roleInOrganization: userData.role,
+            friends: [],
+            bookedEvents: [],
+            attendedEvents: [],
+            bookmarkedEvents: [],
+            lovedEvents: [],
+            following: [],
+            role: 'organizer',
+            lastLogin: new Date().toISOString(),
+            theme: 'light',
+          };
+
+          setUser(completeUser);
+          setPendingUserData(null);
+          setIsOrganizerOnboarding(false);
+          success('Welcome to EventConnect!', 'Your organizer profile has been created successfully.');
+        } else {
+          // Handle regular user onboarding
+          const profileData = {
+            username: pendingUserData.username,
+            name: userData.name,
+            age: userData.age,
+            is_parent: userData.isParent,
+            number_of_children: userData.numberOfChildren,
+            hobbies: userData.hobbies,
+            email: pendingUserData.email,
+          };
+
+          await createUserProfile(pendingUserData.id, profileData);
+
+          const completeUser: User = {
+            id: pendingUserData.id,
+            username: pendingUserData.username,
+            ...userData,
+            friends: [],
+            bookedEvents: [],
+            attendedEvents: [],
+            bookmarkedEvents: [],
+            lovedEvents: [],
+            following: [],
+            role: pendingUserData.role,
+            lastLogin: new Date().toISOString(),
+            theme: 'light',
+          };
+
+          setUser(completeUser);
+          setPendingUserData(null);
+          success('Welcome to EventConnect!', 'Your profile has been created successfully.');
+        }
       } catch (error: any) {
         setError(error.message);
       } finally {
@@ -503,6 +602,10 @@ function App() {
   };
 
   const renderContent = () => {
+    if (user?.role === 'organizer' && activeTab === 'home') {
+      return <OrganizerDashboard />;
+    }
+
     if (user?.role === 'admin' && activeTab === 'home') {
       return <AdminDashboard analytics={analytics} />;
     }
@@ -638,6 +741,7 @@ function App() {
               <WelcomePage
                 onSignUpClick={() => setAuthMode('signup')}
                 onSignInClick={() => setAuthMode('signin')}
+                onOrganizerClick={handleWelcomeOrganizerClick}
               />
             )}
             {authMode === 'signin' && (
@@ -656,8 +760,33 @@ function App() {
                 error={error}
               />
             )}
+            {authMode === 'organizer-signup' && (
+              <AuthForm
+                mode="organizer-signup"
+                onSubmit={(credentials) => {
+                  setIsOrganizerOnboarding(true);
+                  return handleSignUp(credentials);
+                }}
+                onBack={() => setAuthMode('welcome')}
+                error={error}
+              />
+            )}
+            {authMode === 'organizer-signin' && (
+              <AuthForm
+                mode="organizer-signin"
+                onSubmit={(credentials) => {
+                  setIsOrganizerOnboarding(true);
+                  return handleSignIn(credentials);
+                }}
+                onBack={() => setAuthMode('welcome')}
+                error={error}
+              />
+            )}
             {authMode === 'onboarding' && (
-              <OnboardingFlow onComplete={handleOnboardingComplete} />
+              <OnboardingFlow
+                onComplete={handleOnboardingComplete}
+                isOrganizer={isOrganizerOnboarding}
+              />
             )}
           </>
         )}

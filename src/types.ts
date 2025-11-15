@@ -2,10 +2,14 @@ export interface User {
   id: string;
   username: string;
   name: string;
-  age: number;
-  isParent: boolean;
-  numberOfChildren: number;
-  hobbies: string[];
+  age?: number;
+  isParent?: boolean;
+  numberOfChildren?: number;
+  hobbies?: string[];
+  organizationName?: string;
+  industry?: string;
+  website?: string;
+  roleInOrganization?: string;
   profilePicture?: string;
   coverPhoto?: string;
   bio?: string;
@@ -15,7 +19,7 @@ export interface User {
   bookmarkedEvents: string[];
   lovedEvents: string[];
   following: string[];
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'organizer';
   lastLogin: string;
   theme: Theme['id'];
   contacts?: Contact[];
