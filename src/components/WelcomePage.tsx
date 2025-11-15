@@ -7,13 +7,15 @@ import { useToast } from '../hooks/useToast';
 interface WelcomePageProps {
   onSignUpClick: () => void;
   onSignInClick: () => void;
-  onOrganizerClick: () => void;
+  onOrganizerSignUpClick: () => void;
+  onOrganizerSignInClick: () => void;
 }
 
 export const WelcomePage: React.FC<WelcomePageProps> = ({
   onSignUpClick,
   onSignInClick,
-  onOrganizerClick,
+  onOrganizerSignUpClick,
+  onOrganizerSignInClick,
 }) => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { error } = useToast();
@@ -136,15 +138,25 @@ export const WelcomePage: React.FC<WelcomePageProps> = ({
           Sign In
         </motion.button>
 
-        {/* Organizer Portal Button */}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={onOrganizerClick}
-          className="w-full bg-yellow-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-200 mt-4"
-        >
-          Sign Up/In as Organizer
-        </motion.button>
+        {/* Organizer Portal Buttons */}
+        <div className="flex space-x-3 mt-4">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onOrganizerSignUpClick}
+            className="flex-1 bg-yellow-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-200 text-sm"
+          >
+            Organizer Sign Up
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onOrganizerSignInClick}
+            className="flex-1 bg-yellow-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-yellow-700 transition-colors duration-200 text-sm"
+          >
+            Organizer Sign In
+          </motion.button>
+        </div>
       </motion.div>
     </motion.div>
   );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { OnboardingFlow } from './components/OnboardingFlow';
-import { BottomNavigation } from './components/BottomNavigation';
+import { ResponsiveNavigation } from './components/ResponsiveNavigation';
 import { EventFeed } from './components/EventFeed';
 import { WelcomePage } from './components/WelcomePage';
 import { AuthForm } from './components/AuthForm';
@@ -12,17 +12,14 @@ import { ShareModal } from './components/ShareModal';
 import { OrganizerProfile } from './components/OrganizerProfile';
 import { AdminDashboard } from './components/AdminDashboard';
 import { OrganizerDashboard } from './components/OrganizerDashboard';
-import { ThemeSelector } from './components/ThemeSelector';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast';
-import { ChatDebugPanel } from './components/ChatDebugPanel';
 import { AuthCallback } from './components/AuthCallback';
 import { signIn, signUp, getCurrentSession, onAuthStateChange, getUserProfile, createUserProfile, getUserProfileByUsername, setupTestUserFriendshipAndChat } from './lib/auth';
 import { getUnreadMessageCount } from './lib/chat';
 import { getEvents, getUserBookmarkedEvents, getUserLikedEvents, getUserAttendingEvents, toggleEventBookmark, toggleEventLike, signUpForEvent, incrementEventClicks } from './lib/events';
 import { isSupabaseConfigured } from './lib/supabase';
-import { getStoredTheme, applyTheme } from './lib/theme';
 import { useAppStore } from './store/appStore';
 import { useToast } from './hooks/useToast';
 import type { User, Event, AuthUser, Analytics, Theme, Chat } from './types';
@@ -33,14 +30,12 @@ function App() {
     isAuthenticated,
     authLoading,
     activeTab,
-    theme,
     isLoading,
     error,
     unreadMessages,
     setUser,
     setAuthLoading,
     setActiveTab,
-    setTheme,
     setLoading,
     setError,
     setUnreadMessages,
@@ -71,10 +66,6 @@ function App() {
   const [userBookmarks, setUserBookmarks] = useState<string[]>([]);
   const [userLikes, setUserLikes] = useState<string[]>([]);
   const [userAttending, setUserAttending] = useState<string[]>([]);
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
 
   useEffect(() => {
     if (user) {
@@ -127,9 +118,6 @@ function App() {
     }
   };
 
-  const handleThemeChange = (newTheme: Theme['id']) => {
-    setTheme(newTheme);
-  };
 
   // Check if Supabase is configured
   if (!isSupabaseConfigured()) {
@@ -443,8 +431,12 @@ function App() {
     success('Signed Out', 'You have been successfully signed out.');
   };
 
-  const handleWelcomeOrganizerClick = () => {
+  const handleWelcomeOrganizerSignUpClick = () => {
     setAuthMode('organizer-signup');
+  };
+
+  const handleWelcomeOrganizerSignInClick = () => {
+    setAuthMode('organizer-signin');
   };
 
   const handleOnboardingComplete = async (userData: any) => {
@@ -710,8 +702,10 @@ function App() {
         {/* Main Content */}
         {user ? (
           <>
-            {renderContent()}
-            <BottomNavigation
+            <div className="md:ml-16">
+              {renderContent()}
+            </div>
+            <ResponsiveNavigation
               activeTab={activeTab}
               onTabChange={(tab) => {
                 setActiveTab(tab);
@@ -737,12 +731,7 @@ function App() {
                 />
               </>
             )}
-            <div className="fixed top-4 right-4 z-40">
-              <ThemeSelector currentTheme={theme} onThemeChange={handleThemeChange} />
-            </div>
 
-            {/* Debug Panel for Chat Testing */}
-            <ChatDebugPanel user={user} />
           </>
         ) : (
           <>
@@ -751,7 +740,8 @@ function App() {
               <WelcomePage
                 onSignUpClick={() => setAuthMode('signup')}
                 onSignInClick={() => setAuthMode('signin')}
-                onOrganizerClick={handleWelcomeOrganizerClick}
+                onOrganizerSignUpClick={handleWelcomeOrganizerSignUpClick}
+                onOrganizerSignInClick={handleWelcomeOrganizerSignInClick}
               />
             )}
             {authMode === 'signin' && (

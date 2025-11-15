@@ -132,24 +132,6 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
           <div className="flex space-x-4 mt-4">
             <button
               type="button"
-              onClick={() => {/* Add edit profile handler */}}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg flex items-center space-x-2 hover:bg-blue-600 transition-colors"
-            >
-              <Edit className="w-4 h-4" />
-              <span>Edit Profile</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleSetupTestChat}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg flex items-center space-x-2 hover:bg-green-600 transition-colors"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>Setup Test Chat</span>
-            </button>
-
-            <button
-              type="button"
               onClick={handleSignOut}
               className="px-4 py-2 bg-red-500 text-white rounded-lg flex items-center space-x-2 hover:bg-red-600 transition-colors"
             >
