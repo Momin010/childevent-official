@@ -100,11 +100,15 @@ function App() {
 
   // Check for existing session on mount
   useEffect(() => {
+    console.log('🔄 useEffect for session check triggered');
     const checkSession = async () => {
+      console.log('🔄 Session check starting...');
       try {
         setAuthLoading(true);
         const session = await getCurrentSession();
+        console.log('Session result:', session);
         if (session?.user) {
+          console.log('Session user found:', session.user.id);
           try {
             // Check if this is a test user by username
             const username = session.user.user_metadata?.username;
