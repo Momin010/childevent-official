@@ -1,12 +1,11 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { getCurrentSession, getUserProfile } from '../lib/auth';
 import { useAppStore } from '../store/appStore';
 import { LoadingSpinner } from './LoadingSpinner';
 
 export const AuthCallback: React.FC = () => {
-  const navigate = useNavigate();
   const { setUser, setAuthLoading } = useAppStore();
+  const [callbackHandled, setCallbackHandled] = useState(false);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -38,28 +37,33 @@ export const AuthCallback: React.FC = () => {
                 lastLogin: new Date().toISOString(),
                 theme: 'light',
               });
-              navigate('/');
+              // Redirect to main app
+              window.location.href = '/';
             } else {
-              // User needs to complete onboarding
-              navigate('/onboarding');
+              // User needs to complete onboarding - redirect to main app which will handle onboarding
+              window.location.href = '/';
             }
           } catch (error) {
-            // Profile doesn't exist, redirect to onboarding
-            navigate('/onboarding');
+            // Profile doesn't exist, redirect to main app which will handle onboarding
+            window.location.href = '/';
           }
         } else {
-          navigate('/welcome');
+          // No session, redirect to welcome
+          window.location.href = '/';
         }
       } catch (error) {
         console.error('Auth callback error:', error);
-        navigate('/welcome');
+        window.location.href = '/';
       } finally {
         setAuthLoading(false);
       }
     };
 
-    handleAuthCallback();
-  }, [navigate, setUser, setAuthLoading]);
+    if (!callbackHandled) {
+      setCallbackHandled(true);
+      handleAuthCallback();
+    }
+  }, [callbackHandled, setUser, setAuthLoading]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

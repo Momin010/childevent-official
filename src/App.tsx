@@ -16,6 +16,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast';
 import { ChatDebugPanel } from './components/ChatDebugPanel';
+import { AuthCallback } from './components/AuthCallback';
 import { signIn, signUp, getCurrentSession, onAuthStateChange, getUserProfile, createUserProfile, getUserProfileByUsername, setupTestUserFriendshipAndChat } from './lib/auth';
 import { getUnreadMessageCount } from './lib/chat';
 import { getEvents, getUserBookmarkedEvents, getUserLikedEvents, getUserAttendingEvents, toggleEventBookmark, toggleEventLike, signUpForEvent, incrementEventClicks } from './lib/events';
@@ -564,6 +565,11 @@ function App() {
         return null;
     }
   };
+
+  // Handle OAuth callback
+  if (window.location.pathname === '/auth/callback') {
+    return <AuthCallback />;
+  }
 
   if (authLoading) {
     return (
