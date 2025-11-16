@@ -23,10 +23,12 @@ interface UserAppProps {
 }
 
 export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }) => {
+  console.log('UserApp mounted/re-rendered, initialUser:', initialUser);
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(initialUser || null);
   const [loading, setLoading] = useState(!initialUser);
+  const [loadAttempted, setLoadAttempted] = useState(false);
   const {
     activeTab,
     setActiveTab,
@@ -57,7 +59,8 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
   const [userAttending, setUserAttending] = useState<string[]>([]);
 
   useEffect(() => {
-    if (!user && !loading) {
+    if (!user && !loading && !loadAttempted) {
+      setLoadAttempted(true);
       loadUser();
     }
   }, []); // Only run once on mount
@@ -103,6 +106,7 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
 
           console.log('UserApp loadUser - setting user:', userData);
           setUser(userData);
+          console.log('UserApp loadUser - user set, should exit loading');
         } else if (profile?.is_organizer) {
           console.log('UserApp loadUser - user is organizer, should not be here');
           // Redirect to organizer login if somehow an organizer ended up here
