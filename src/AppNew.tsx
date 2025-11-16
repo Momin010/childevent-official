@@ -8,6 +8,8 @@ import { OrganizerOnboardingPage } from './components/OrganizerOnboardingPage';
 import { UserApp } from './components/UserApp';
 import { OrganizerApp } from './components/OrganizerApp';
 import { AuthCallback } from './components/AuthCallback';
+import { AdminPasswordPage } from './components/AdminPasswordPage';
+import { AdminPanel } from './components/AdminPanel';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast';
@@ -210,6 +212,10 @@ function App() {
 
             {/* Auth callback */}
             <Route path="/auth/callback" element={<AuthCallback />} />
+
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminPasswordPage />} />
+            <Route path="/adminpanel" element={<AdminPanel />} />
           </Routes>
         </div>
       </Router>
