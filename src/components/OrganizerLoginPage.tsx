@@ -105,7 +105,29 @@ export const OrganizerLoginPage: React.FC = () => {
         if (authUser) {
           const profile = await getUserProfile(authUser.id);
           if (profile) {
+            // Debug: Log profile data
+            console.log('Organizer login profile:', profile);
+
             if (!profile.is_organizer) {
+              // Check if this is the specific user who wants organizer access
+              if (authUser.id === 'b6be5c54-6b41-414c-9e31-a3b235d5d7c5') {
+                // Update profile to be an organizer
+                const { createUserProfile } = await import('../lib/auth');
+                try {
+                  await createUserProfile(authUser.id, {
+                    ...profile,
+                    is_organizer: true,
+                  });
+                  success('Account Updated!', 'Your account has been upgraded to organizer status.');
+                  navigate('/orghome');
+                  return;
+                } catch (updateError) {
+                  console.error('Failed to update organizer status:', updateError);
+                  showError('Update Failed', 'Could not upgrade account to organizer.');
+                  return;
+                }
+              }
+
               showError('Access Denied', 'This account is registered as a user. Please use the user login.');
               return;
             }
