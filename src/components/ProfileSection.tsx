@@ -128,23 +128,50 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
           </div>
         </div>
 
-        {/* User Info */}
+        {/* User/Organizer Info */}
         <div className="pt-20 pb-4 border-b">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold">{user.name}</h1>
-              <p className="text-gray-600">{user.bio || 'No bio yet'}</p>
+              <h1 className="text-3xl font-bold">
+                {user.role === 'organizer' ? user.organizationName || user.name : user.name}
+              </h1>
+              <p className="text-gray-600">
+                {user.role === 'organizer'
+                  ? user.bio || `Event organizer • ${user.industry || 'Various industries'}`
+                  : user.bio || 'No bio yet'
+                }
+              </p>
 
-              <div className="flex space-x-4 mt-4">
-                <div className="flex items-center space-x-2">
-                  <Users className="w-5 h-5 text-gray-500" />
-                  <span>{user.friends.length} Friends</span>
+              {user.role === 'organizer' ? (
+                <div className="flex space-x-4 mt-4">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-5 h-5 text-gray-500" />
+                    <span>0 Events Created</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-5 h-5 text-gray-500" />
+                    <span>0 Total Attendees</span>
+                  </div>
+                  {user.website && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-blue-500 hover:underline cursor-pointer">
+                        {user.website}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-5 h-5 text-gray-500" />
-                  <span>{bookedEvents.length} Upcoming Events</span>
+              ) : (
+                <div className="flex space-x-4 mt-4">
+                  <div className="flex items-center space-x-2">
+                    <Users className="w-5 h-5 text-gray-500" />
+                    <span>{user.friends.length} Friends</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-5 h-5 text-gray-500" />
+                    <span>{bookedEvents.length} Upcoming Events</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <button
@@ -158,101 +185,186 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
           </div>
         </div>
 
-        {/* Friends Section */}
-        <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Friends</h2>
-            <button 
-              onClick={() => setIsFriendModalOpen(true)}
-              className="text-blue-500 hover:text-blue-600 flex items-center space-x-1"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Friends</span>
-            </button>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {user.friends.map((friend) => (
-              <motion.div
-                key={friend.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gray-50 rounded-lg p-4 flex items-center space-x-3"
+        {/* Friends Section - Only for regular users */}
+        {user.role !== 'organizer' && (
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Friends</h2>
+              <button
+                onClick={() => setIsFriendModalOpen(true)}
+                className="text-blue-500 hover:text-blue-600 flex items-center space-x-1"
               >
-                <img
-                  src={friend.profilePicture || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e'}
-                  alt={friend.name}
-                  className="w-10 h-10 rounded-full"
-                />
+                <Plus className="w-4 h-4" />
+                <span>Add Friends</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {user.friends.map((friend) => (
+                <motion.div
+                  key={friend.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gray-50 rounded-lg p-4 flex items-center space-x-3"
+                >
+                  <img
+                    src={friend.profilePicture || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e'}
+                    alt={friend.name}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div>
+                    <p className="font-medium">{friend.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {friend.isOnline ? 'Online' : friend.status}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Organization Info - Only for organizers */}
+        {user.role === 'organizer' && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-4">Organization Details</h2>
+            <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="font-medium">{friend.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {friend.isOnline ? 'Online' : friend.status}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                  <p className="text-gray-900">{user.industry || 'Not specified'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+                  <p className="text-gray-900">{user.name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <p className="text-gray-900">{user.roleInOrganization || 'Not specified'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                  <p className="text-gray-900">
+                    {user.website ? (
+                      <a href={user.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                        {user.website}
+                      </a>
+                    ) : 'Not provided'}
                   </p>
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Events Sections */}
         <div className="mt-8 space-y-8">
-          {/* Upcoming Events */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Upcoming Events</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {bookedEvents.map((event) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-lg shadow p-4"
-                >
-                  <img
-                    src={event.imageUrl}
-                    alt={event.title}
-                    className="w-full h-48 object-cover rounded-lg mb-4"
-                  />
-                  <h3 className="font-semibold">{event.title}</h3>
-                  <p className="text-gray-600">{event.date} at {event.time}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          {user.role === 'organizer' ? (
+            /* Organizer Events - Events they've created */
+            <>
+              <div>
+                <h2 className="text-xl font-semibold mb-4">My Events</h2>
+                <div className="text-center py-12 text-gray-500">
+                  <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg mb-2">No events created yet</p>
+                  <p className="text-sm">Create your first event to see it here</p>
+                </div>
+              </div>
 
-          {/* Past Events */}
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Past Events</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {attendedEvents.map((event) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-lg shadow p-4"
-                >
-                  <img
-                    src={event.imageUrl}
-                    alt={event.title}
-                    className="w-full h-48 object-cover rounded-lg mb-4 opacity-75"
-                  />
-                  <h3 className="font-semibold">{event.title}</h3>
-                  <p className="text-gray-600">{event.date} at {event.time}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+              {/* Organizer Analytics */}
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Event Analytics</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white rounded-lg shadow p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-500 mb-1">0</div>
+                    <div className="text-sm text-gray-600">Total Views</div>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-4 text-center">
+                    <div className="text-2xl font-bold text-green-500 mb-1">0</div>
+                    <div className="text-sm text-gray-600">Sign-ups</div>
+                  </div>
+                  <div className="bg-white rounded-lg shadow p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-500 mb-1">0</div>
+                    <div className="text-sm text-gray-600">Shares</div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* User Events - Events they've signed up for */
+            <>
+              {/* Upcoming Events */}
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Upcoming Events</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {bookedEvents.map((event) => (
+                    <motion.div
+                      key={event.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white rounded-lg shadow p-4"
+                    >
+                      <img
+                        src={event.imageUrl}
+                        alt={event.title}
+                        className="w-full h-48 object-cover rounded-lg mb-4"
+                      />
+                      <h3 className="font-semibold">{event.title}</h3>
+                      <p className="text-gray-600">{event.date} at {event.time}</p>
+                    </motion.div>
+                  ))}
+                  {bookedEvents.length === 0 && (
+                    <div className="col-span-full text-center py-12 text-gray-500">
+                      <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg mb-2">No upcoming events</p>
+                      <p className="text-sm">Browse events and sign up for ones you like!</p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-          {/* Saved Events */}
-          <div className="flex space-x-4 mt-6">
-            <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-              <Bookmark className="w-5 h-5" />
-              <span>Bookmarked Events</span>
-            </button>
-            <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-              <Heart className="w-5 h-5" />
-              <span>Loved Events</span>
-            </button>
-          </div>
+              {/* Past Events */}
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Past Events</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {attendedEvents.map((event) => (
+                    <motion.div
+                      key={event.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white rounded-lg shadow p-4"
+                    >
+                      <img
+                        src={event.imageUrl}
+                        alt={event.title}
+                        className="w-full h-48 object-cover rounded-lg mb-4 opacity-75"
+                      />
+                      <h3 className="font-semibold">{event.title}</h3>
+                      <p className="text-gray-600">{event.date} at {event.time}</p>
+                    </motion.div>
+                  ))}
+                  {attendedEvents.length === 0 && (
+                    <div className="col-span-full text-center py-12 text-gray-500">
+                      <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg mb-2">No past events</p>
+                      <p className="text-sm">Events you've attended will appear here</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Saved Events */}
+              <div className="flex space-x-4 mt-6">
+                <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                  <Bookmark className="w-5 h-5" />
+                  <span>Bookmarked Events</span>
+                </button>
+                <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                  <Heart className="w-5 h-5" />
+                  <span>Loved Events</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
