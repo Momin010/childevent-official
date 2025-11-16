@@ -35,7 +35,14 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
   } = useAppStore();
 
   // Determine current page from route
-  const currentPage = location.pathname.replace('/user', '') || 'home';
+  const routeToPageMap = {
+    '/user': 'home',
+    '/userhome': 'home',
+    '/usercalendar': 'calendar',
+    '/userchat': 'chat',
+    '/userprofile': 'profile'
+  };
+  const currentPage = routeToPageMap[location.pathname as keyof typeof routeToPageMap] || 'home';
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -237,6 +244,8 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
             userRole="user"
           />
         );
+      case 'chat':
+        return user ? <ChatSection user={user} /> : null;
       case 'profile':
         return (
           <ProfileSection
@@ -285,7 +294,13 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
       <ResponsiveNavigation
         activeTab={currentPage}
         onTabChange={(tab) => {
-          navigate(`/user${tab === 'home' ? '' : tab}`);
+          const routes = {
+            home: '/userhome',
+            calendar: '/usercalendar',
+            chat: '/userchat',
+            profile: '/userprofile'
+          };
+          navigate(routes[tab as keyof typeof routes] || '/userhome');
           setSelectedOrganizer(null);
         }}
         unreadMessages={unreadMessages}

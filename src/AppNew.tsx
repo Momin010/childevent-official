@@ -141,6 +141,16 @@ function App() {
                 )
               }
             />
+            <Route
+              path="/userchat"
+              element={
+                user && user.role === 'user' ? (
+                  <UserApp user={user} onSignOut={handleSignOut} />
+                ) : (
+                  <Navigate to="/userlogin" replace />
+                )
+              }
+            />
 
             {/* Organizer routes */}
             <Route path="/orglogin" element={<OrganizerLoginPage />} />
