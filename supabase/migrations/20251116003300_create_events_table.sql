@@ -36,7 +36,7 @@ CREATE INDEX IF NOT EXISTS idx_events_date ON events(date);
 CREATE INDEX IF NOT EXISTS idx_events_category ON events(category);
 CREATE INDEX IF NOT EXISTS idx_events_created_at ON events(created_at);
 
--- Create updated_at trigger
+-- Create or replace updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -44,6 +44,9 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+-- Ensure any existing trigger is removed before creating (idempotent)
+DROP TRIGGER IF EXISTS update_events_updated_at ON events;
 
 CREATE TRIGGER update_events_updated_at
     BEFORE UPDATE ON events
@@ -54,12 +57,12 @@ CREATE TRIGGER update_events_updated_at
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
--- Organizers can view and manage their own events
-CREATE POLICY "Users can view all events" ON events
+-- Users can view all events
+CREATE POLICY IF NOT EXISTS "Users can view all events" ON events
     FOR SELECT USING (true);
 
 -- Only organizers can create events
-CREATE POLICY "Organizers can create events" ON events
+CREATE POLICY IF NOT EXISTS "Organizers can create events" ON events
     FOR INSERT WITH CHECK (
         EXISTS (
             SELECT 1 FROM profiles
@@ -69,11 +72,11 @@ CREATE POLICY "Organizers can create events" ON events
     );
 
 -- Only event organizers can update their events
-CREATE POLICY "Organizers can update their events" ON events
+CREATE POLICY IF NOT EXISTS "Organizers can update their events" ON events
     FOR UPDATE USING (organizer_id = auth.uid());
 
 -- Only event organizers can delete their events
-CREATE POLICY "Organizers can delete their events" ON events
+CREATE POLICY IF NOT EXISTS "Organizers can delete their events" ON events
     FOR DELETE USING (organizer_id = auth.uid());
 
 -- Create event_attendees table for tracking who signed up for events
@@ -95,16 +98,16 @@ CREATE INDEX IF NOT EXISTS idx_event_attendees_user_id ON event_attendees(user_i
 ALTER TABLE event_attendees ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for event_attendees
-CREATE POLICY "Users can view event attendees" ON event_attendees
+CREATE POLICY IF NOT EXISTS "Users can view event attendees" ON event_attendees
     FOR SELECT USING (true);
 
-CREATE POLICY "Users can sign up for events" ON event_attendees
+CREATE POLICY IF NOT EXISTS "Users can sign up for events" ON event_attendees
     FOR INSERT WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update their event attendance" ON event_attendees
+CREATE POLICY IF NOT EXISTS "Users can update their event attendance" ON event_attendees
     FOR UPDATE USING (user_id = auth.uid());
 
-CREATE POLICY "Users can cancel their event attendance" ON event_attendees
+CREATE POLICY IF NOT EXISTS "Users can cancel their event attendance" ON event_attendees
     FOR DELETE USING (user_id = auth.uid());
 
 -- Create event_comments table for event discussions
@@ -127,17 +130,20 @@ CREATE INDEX IF NOT EXISTS idx_event_comments_created_at ON event_comments(creat
 ALTER TABLE event_comments ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for event_comments
-CREATE POLICY "Users can view event comments" ON event_comments
+CREATE POLICY IF NOT EXISTS "Users can view event comments" ON event_comments
     FOR SELECT USING (true);
 
-CREATE POLICY "Users can create comments" ON event_comments
+CREATE POLICY IF NOT EXISTS "Users can create comments" ON event_comments
     FOR INSERT WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update their comments" ON event_comments
+CREATE POLICY IF NOT EXISTS "Users can update their comments" ON event_comments
     FOR UPDATE USING (user_id = auth.uid());
 
-CREATE POLICY "Users can delete their comments" ON event_comments
+CREATE POLICY IF NOT EXISTS "Users can delete their comments" ON event_comments
     FOR DELETE USING (user_id = auth.uid());
+
+-- Ensure any existing trigger is removed before creating (idempotent)
+DROP TRIGGER IF EXISTS update_event_comments_updated_at ON event_comments;
 
 -- Create trigger for event_comments updated_at
 CREATE TRIGGER update_event_comments_updated_at
@@ -163,13 +169,13 @@ CREATE INDEX IF NOT EXISTS idx_event_likes_user_id ON event_likes(user_id);
 ALTER TABLE event_likes ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for event_likes
-CREATE POLICY "Users can view event likes" ON event_likes
+CREATE POLICY IF NOT EXISTS "Users can view event likes" ON event_likes
     FOR SELECT USING (true);
 
-CREATE POLICY "Users can like events" ON event_likes
+CREATE POLICY IF NOT EXISTS "Users can like events" ON event_likes
     FOR INSERT WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can unlike events" ON event_likes
+CREATE POLICY IF NOT EXISTS "Users can unlike events" ON event_likes
     FOR DELETE USING (user_id = auth.uid());
 
 -- Create event_bookmarks table for tracking saved events
@@ -190,11 +196,11 @@ CREATE INDEX IF NOT EXISTS idx_event_bookmarks_user_id ON event_bookmarks(user_i
 ALTER TABLE event_bookmarks ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for event_bookmarks
-CREATE POLICY "Users can view their bookmarks" ON event_bookmarks
+CREATE POLICY IF NOT EXISTS "Users can view their bookmarks" ON event_bookmarks
     FOR SELECT USING (user_id = auth.uid());
 
-CREATE POLICY "Users can bookmark events" ON event_bookmarks
+CREATE POLICY IF NOT EXISTS "Users can bookmark events" ON event_bookmarks
     FOR INSERT WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can remove bookmarks" ON event_bookmarks
+CREATE POLICY IF NOT EXISTS "Users can remove bookmarks" ON event_bookmarks
     FOR DELETE USING (user_id = auth.uid());
