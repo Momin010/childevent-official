@@ -58,11 +58,16 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
   const loadUser = async () => {
     try {
       setLoading(true);
+      console.log('OrganizerApp loadUser - starting');
       const session = await getCurrentSession();
+      console.log('OrganizerApp loadUser - session:', session);
+
       if (session?.user) {
         const profile = await getUserProfile(session.user.id);
+        console.log('OrganizerApp loadUser - profile:', profile);
+
         if (profile && profile.is_organizer) {
-          setUser({
+          const userData = {
             id: profile.id,
             username: profile.username,
             name: profile.name,
@@ -80,12 +85,17 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
             organizerId: profile.organizer_id,
             lastLogin: new Date().toISOString(),
             theme: 'light',
-          });
+          };
+
+          console.log('OrganizerApp loadUser - setting user:', userData);
+          setUser(userData);
         } else {
+          console.log('OrganizerApp loadUser - not an organizer or no profile');
           // Not an organizer, redirect to login
           navigate('/orglogin');
         }
       } else {
+        console.log('OrganizerApp loadUser - no session');
         // No session, redirect to login
         navigate('/orglogin');
       }

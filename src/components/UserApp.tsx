@@ -59,12 +59,16 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
   useEffect(() => {
     if (!user && !loading) {
       loadUser();
-    } else if (user) {
+    }
+  }, []); // Only run once on mount
+
+  useEffect(() => {
+    if (user) {
       loadUnreadMessages();
       loadEvents();
       loadUserEventData();
     }
-  }, [user, loading]);
+  }, [user]); // Run when user is set
 
   const loadUser = async () => {
     try {
@@ -72,8 +76,10 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
       const session = await getCurrentSession();
       if (session?.user) {
         const profile = await getUserProfile(session.user.id);
+        console.log('UserApp loadUser - profile:', profile);
+
         if (profile && !profile.is_organizer) {
-          setUser({
+          const userData = {
             id: profile.id,
             username: profile.username,
             name: profile.name,
@@ -93,11 +99,24 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
             role: 'user',
             lastLogin: new Date().toISOString(),
             theme: 'light',
-          });
+          };
+
+          console.log('UserApp loadUser - setting user:', userData);
+          setUser(userData);
+        } else if (profile?.is_organizer) {
+          console.log('UserApp loadUser - user is organizer, should not be here');
+          // Redirect to organizer login if somehow an organizer ended up here
+          navigate('/orglogin');
+        } else {
+          console.log('UserApp loadUser - no profile found');
         }
+      } else {
+        console.log('UserApp loadUser - no session');
+        navigate('/userlogin');
       }
     } catch (error) {
       console.error('Error loading user:', error);
+      navigate('/userlogin');
     } finally {
       setLoading(false);
     }

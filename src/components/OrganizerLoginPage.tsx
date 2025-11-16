@@ -137,7 +137,12 @@ export const OrganizerLoginPage: React.FC = () => {
               return;
             }
             success('Welcome back!', 'You have successfully signed in.');
-            navigate('/orghome');
+            setIsLoading(false); // Reset loading state before navigation
+
+            // Force navigation after a short delay to ensure it works
+            setTimeout(() => {
+              navigate('/orghome');
+            }, 100);
           } else {
             showError('Profile Not Found', 'Your organizer profile could not be found.');
           }
