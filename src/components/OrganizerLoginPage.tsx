@@ -128,7 +128,12 @@ export const OrganizerLoginPage: React.FC = () => {
                 }
               }
 
-              showError('Access Denied', 'This account is registered as a user. Please use the user login.');
+              // For other users, offer to upgrade to organizer or redirect to signup
+              showError('Organizer Access Required', 'This account is not registered as an organizer. Please sign up as an organizer first.');
+              // Redirect to signup mode after a short delay
+              setTimeout(() => {
+                setMode('signup');
+              }, 2000);
               return;
             }
             success('Welcome back!', 'You have successfully signed in.');

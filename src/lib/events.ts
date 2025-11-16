@@ -4,61 +4,38 @@ import type { Event } from '../types';
 // Get all events
 export const getEvents = async (): Promise<Event[]> => {
   try {
-    // Get events and join with profiles manually since we're using profiles for organizers
-    const { data: eventsData, error: eventsError } = await supabase
-      .from('events')
+    const { data, error } = await supabase
+      .from('events_with_profiles')
       .select('*')
       .order('date', { ascending: true });
 
-    if (eventsError) throw eventsError;
+    if (error) throw error;
 
-    // Get unique organizer IDs
-    const organizerIds = [...new Set(eventsData.map(event => event.organizer_id))];
-
-    // Get organizer profiles
-    const { data: profilesData, error: profilesError } = await supabase
-      .from('profiles')
-      .select('id, name, profile_picture')
-      .in('id', organizerIds);
-
-    if (profilesError) {
-      console.warn('Could not fetch organizer profiles:', profilesError);
-    }
-
-    // Create a map of organizer profiles
-    const profilesMap = new Map();
-    profilesData?.forEach(profile => {
-      profilesMap.set(profile.id, profile);
-    });
-
-    return eventsData.map(event => {
-      const organizerProfile = profilesMap.get(event.organizer_id);
-      return {
-        id: event.id,
-        title: event.title,
-        description: event.description,
-        imageUrl: event.image_url,
-        date: event.date,
-        time: event.time,
-        location: event.location,
-        organizer: {
-          id: event.organizer_id,
-          name: organizerProfile?.name || 'Unknown Organizer',
-          profilePicture: organizerProfile?.profile_picture || null,
-          followers: 0, // Will be calculated separately
-          events: 0, // Will be calculated separately
-        },
-        interestedCount: event.signups_count || 0,
-        goingCount: event.signups_count || 0, // Using signups as going count
-        likes: event.likes_count || 0,
-        comments: [], // Will be loaded separately if needed
-        attendees: [], // Will be loaded separately if needed
-        isBookmarked: false, // Will be set based on user data
-        isLoved: false, // Will be set based on user data
-        clicks: event.clicks_count || 0,
-        createdAt: event.created_at,
-      };
-    });
+    return data.map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      imageUrl: event.image_url,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      organizer: {
+        id: event.organizer_id,
+        name: event.organizer_name,
+        profilePicture: event.organizer_profile_picture,
+        followers: 0, // Will be calculated separately
+        events: 0, // Will be calculated separately
+      },
+      interestedCount: event.signups_count || 0,
+      goingCount: event.signups_count || 0, // Using signups as going count
+      likes: event.likes_count || 0,
+      comments: [], // Will be loaded separately if needed
+      attendees: [], // Will be loaded separately if needed
+      isBookmarked: false, // Will be set based on user data
+      isLoved: false, // Will be set based on user data
+      clicks: event.clicks_count || 0,
+      createdAt: event.created_at,
+    }));
   } catch (error) {
     console.error('Error fetching events:', error);
     return [];
@@ -299,10 +276,7 @@ export const createEvent = async (eventData: {
       .eq('id', eventData.organizerId)
       .single();
 
-    if (orgError) {
-      console.warn('Could not fetch organizer profile:', orgError);
-      // Use default values if profile not found
-    }
+    if (orgError) throw orgError;
 
     return {
       id: data.id,
@@ -313,9 +287,9 @@ export const createEvent = async (eventData: {
       time: data.time,
       location: data.location,
       organizer: {
-        id: organizerData?.id || eventData.organizerId,
-        name: organizerData?.name || 'Unknown Organizer',
-        profilePicture: organizerData?.profile_picture || null,
+        id: organizerData.id,
+        name: organizerData.name,
+        profilePicture: organizerData.profile_picture,
         followers: 0, // Will be calculated separately
         events: 0, // Will be calculated separately
       },
@@ -338,27 +312,22 @@ export const createEvent = async (eventData: {
 // Get events created by a specific organizer
 export const getOrganizerEvents = async (organizerId: string): Promise<Event[]> => {
   try {
-    // Query events where organizer_id matches the profile id
-    const { data: eventsData, error: eventsError } = await supabase
+    const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select(`
+        *,
+        profiles!events_organizer_id_fkey (
+          id,
+          name,
+          profile_picture
+        )
+      `)
       .eq('organizer_id', organizerId)
       .order('created_at', { ascending: false });
 
-    if (eventsError) throw eventsError;
+    if (error) throw error;
 
-    // Get organizer profile separately
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, name, profile_picture')
-      .eq('id', organizerId)
-      .single();
-
-    if (profileError) {
-      console.warn('Could not fetch organizer profile:', profileError);
-    }
-
-    return eventsData.map(event => ({
+    return data.map(event => ({
       id: event.id,
       title: event.title,
       description: event.description,
@@ -367,9 +336,9 @@ export const getOrganizerEvents = async (organizerId: string): Promise<Event[]> 
       time: event.time,
       location: event.location,
       organizer: {
-        id: profileData?.id || organizerId,
-        name: profileData?.name || 'Unknown Organizer',
-        profilePicture: profileData?.profile_picture || null,
+        id: event.profiles.id,
+        name: event.profiles.name,
+        profilePicture: event.profiles.profile_picture,
         followers: 0, // Will be calculated separately
         events: 0, // Will be calculated separately
       },
