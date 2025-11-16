@@ -81,10 +81,17 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
             lastLogin: new Date().toISOString(),
             theme: 'light',
           });
+        } else {
+          // Not an organizer, redirect to login
+          navigate('/orglogin');
         }
+      } else {
+        // No session, redirect to login
+        navigate('/orglogin');
       }
     } catch (error) {
       console.error('Error loading organizer:', error);
+      navigate('/orglogin');
     } finally {
       setLoading(false);
     }

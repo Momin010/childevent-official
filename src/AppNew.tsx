@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ChoicePage } from './components/ChoicePage';
 import { UserLoginPage } from './components/UserLoginPage';
 import { OrganizerLoginPage } from './components/OrganizerLoginPage';
@@ -24,6 +24,14 @@ function App() {
   useEffect(() => {
     checkAuthStatus();
   }, []);
+
+  // Re-check auth status when navigating to organizer routes
+  useEffect(() => {
+    const currentPath = location.pathname;
+    if (currentPath.startsWith('/org') && !user) {
+      checkAuthStatus();
+    }
+  }, [location.pathname, user]);
 
   const checkAuthStatus = async () => {
     try {
@@ -157,13 +165,7 @@ function App() {
             <Route path="/orgonboarding" element={<OrganizerOnboardingPage />} />
             <Route
               path="/orghome"
-              element={
-                user && user.role === 'organizer' ? (
-                  <OrganizerApp user={user} onSignOut={handleSignOut} />
-                ) : (
-                  <Navigate to="/orglogin" replace />
-                )
-              }
+              element={<OrganizerApp user={user} onSignOut={handleSignOut} />}
             />
             <Route
               path="/orgcalendar"

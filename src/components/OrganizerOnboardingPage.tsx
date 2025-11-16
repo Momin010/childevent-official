@@ -69,6 +69,8 @@ export const OrganizerOnboardingPage: React.FC = () => {
 
         await createUserProfile(session.user.id, profileData);
         success('Welcome to EventConnect!', 'Your organizer profile has been created successfully.');
+
+        // Navigate to organizer home - the app will handle loading the updated user state
         navigate('/orghome');
       } catch (err: any) {
         showError('Profile Creation Failed', err.message);
