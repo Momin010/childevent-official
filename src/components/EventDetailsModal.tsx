@@ -11,6 +11,7 @@ interface EventDetailsModalProps {
   onFollow: (organizerId: string) => void;
   onSignUp: (eventId: string) => void;
   currentUser: User;
+  userAttendingEvents: string[];
 }
 
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
@@ -21,8 +22,9 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   onFollow,
   onSignUp,
   currentUser,
+  userAttendingEvents,
 }) => {
-  const isAttending = event.attendees.some(attendee => attendee.userId === currentUser.id);
+  const isAttending = userAttendingEvents.includes(event.id);
   const isFollowing = currentUser.following.includes(event.organizer.id);
 
   return (

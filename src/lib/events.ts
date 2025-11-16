@@ -174,9 +174,25 @@ export const toggleEventLike = async (eventId: string, userId: string): Promise<
 // Sign up for event
 export const signUpForEvent = async (eventId: string, userId: string): Promise<void> => {
   try {
+    // First check if user is already signed up
+    const { data: existing, error: checkError } = await supabase
+      .from('event_attendees')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+
+    if (existing) {
+      // User is already signed up, just return (no error)
+      return;
+    }
+
+    // User is not signed up, so insert new record
     const { error } = await supabase
       .from('event_attendees')
-      .upsert({
+      .insert({
         event_id: eventId,
         user_id: userId,
         status: 'going'

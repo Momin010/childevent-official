@@ -316,6 +316,7 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
             onFollow={handleFollowOrganizer}
             onSignUp={handleSignUpForEvent}
             currentUser={user}
+            userAttendingEvents={userAttending}
           />
           <ShareModal
             event={selectedEvent}
