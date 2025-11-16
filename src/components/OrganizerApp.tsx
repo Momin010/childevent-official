@@ -33,7 +33,14 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
   } = useAppStore();
 
   // Determine current page from route
-  const currentPage = location.pathname.replace('/org', '') || 'home';
+  const routeToPageMap = {
+    '/orghome': 'home',
+    '/orgevents': 'events',
+    '/orgcalendar': 'calendar',
+    '/orgchat': 'chat',
+    '/orgprofile': 'profile'
+  };
+  const currentPage = routeToPageMap[location.pathname as keyof typeof routeToPageMap] || 'home';
 
   const { toasts, removeToast } = useToast();
 
@@ -141,6 +148,8 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
             userRole="organizer"
           />
         );
+      case 'chat':
+        return user ? <ChatSection user={user} /> : null;
       case 'profile':
         return (
           <ProfileSection
@@ -177,7 +186,14 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
       <ResponsiveNavigation
         activeTab={currentPage}
         onTabChange={(tab) => {
-          navigate(`/org${tab === 'home' ? '' : tab}`);
+          const routes = {
+            home: '/orghome',
+            events: '/orgevents',
+            calendar: '/orgcalendar',
+            chat: '/orgchat',
+            profile: '/orgprofile'
+          };
+          navigate(routes[tab as keyof typeof routes] || '/orghome');
         }}
         unreadMessages={unreadMessages}
         isOrganizer={true}

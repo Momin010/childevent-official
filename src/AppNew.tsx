@@ -185,6 +185,16 @@ function App() {
                 )
               }
             />
+            <Route
+              path="/orgchat"
+              element={
+                user && user.role === 'organizer' ? (
+                  <OrganizerApp user={user} onSignOut={handleSignOut} />
+                ) : (
+                  <Navigate to="/orglogin" replace />
+                )
+              }
+            />
 
             {/* Auth callback */}
             <Route path="/auth/callback" element={<AuthCallback />} />
