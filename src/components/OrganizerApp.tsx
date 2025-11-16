@@ -146,7 +146,12 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
 
     switch (currentPage) {
       case 'home':
-        return <OrganizerDashboard />;
+        return (
+          <OrganizerDashboard
+            events={organizerEvents}
+            onCreateEvent={() => setShowEventForm(true)}
+          />
+        );
       case 'events':
         return (
           <div className="p-6">

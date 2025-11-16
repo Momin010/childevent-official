@@ -1,7 +1,30 @@
 import React from 'react';
 import { Building2, Calendar, Users, TrendingUp, BarChart3, PieChart, Activity } from 'lucide-react';
+import type { Event } from '../types';
 
-export const OrganizerDashboard: React.FC = () => {
+interface OrganizerDashboardProps {
+  events: Event[];
+  onCreateEvent: () => void;
+}
+
+export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({ events, onCreateEvent }) => {
+  // Calculate analytics from events
+  const totalEvents = events.length;
+  const totalAttendees = events.reduce((sum, event) => sum + (event.goingCount || 0), 0);
+  const totalViews = events.reduce((sum, event) => sum + (event.clicks || 0), 0);
+  const totalLikes = events.reduce((sum, event) => sum + (event.likes || 0), 0);
+  const engagementRate = totalEvents > 0 ? Math.round(((totalAttendees + totalViews + totalLikes) / totalEvents) * 10) / 10 : 0;
+
+  // Get category distribution
+  const categoryStats = events.reduce((acc, event) => {
+    const category = event.category || 'Other';
+    acc[category] = (acc[category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const topCategories = Object.entries(categoryStats)
+    .sort(([,a], [,b]) => b - a)
+    .slice(0, 3);
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -16,7 +39,7 @@ export const OrganizerDashboard: React.FC = () => {
               <Calendar className="w-8 h-8 text-blue-500" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Events</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-2xl font-bold text-gray-900">{totalEvents}</p>
               </div>
             </div>
           </div>
@@ -26,7 +49,7 @@ export const OrganizerDashboard: React.FC = () => {
               <Users className="w-8 h-8 text-green-500" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Attendees</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
+                <p className="text-2xl font-bold text-gray-900">{totalAttendees}</p>
               </div>
             </div>
           </div>
@@ -36,7 +59,7 @@ export const OrganizerDashboard: React.FC = () => {
               <TrendingUp className="w-8 h-8 text-purple-500" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Engagement Rate</p>
-                <p className="text-2xl font-bold text-gray-900">0%</p>
+                <p className="text-2xl font-bold text-gray-900">{engagementRate}%</p>
               </div>
             </div>
           </div>
@@ -65,27 +88,36 @@ export const OrganizerDashboard: React.FC = () => {
                 <span className="text-sm text-gray-600">Views</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 h-2 bg-gray-200 rounded">
-                    <div className="w-3/4 h-full bg-blue-500 rounded"></div>
+                    <div
+                      className="h-full bg-blue-500 rounded"
+                      style={{ width: totalEvents > 0 ? `${Math.min((totalViews / totalEvents) * 100, 100)}%` : '0%' }}
+                    ></div>
                   </div>
-                  <span className="text-sm font-medium">0</span>
+                  <span className="text-sm font-medium">{totalViews}</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Sign-ups</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 h-2 bg-gray-200 rounded">
-                    <div className="w-1/2 h-full bg-green-500 rounded"></div>
+                    <div
+                      className="h-full bg-green-500 rounded"
+                      style={{ width: totalEvents > 0 ? `${Math.min((totalAttendees / totalEvents) * 100, 100)}%` : '0%' }}
+                    ></div>
                   </div>
-                  <span className="text-sm font-medium">0</span>
+                  <span className="text-sm font-medium">{totalAttendees}</span>
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Shares</span>
+                <span className="text-sm text-gray-600">Likes</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-24 h-2 bg-gray-200 rounded">
-                    <div className="w-1/4 h-full bg-purple-500 rounded"></div>
+                    <div
+                      className="h-full bg-purple-500 rounded"
+                      style={{ width: totalEvents > 0 ? `${Math.min((totalLikes / totalEvents) * 100, 100)}%` : '0%' }}
+                    ></div>
                   </div>
-                  <span className="text-sm font-medium">0</span>
+                  <span className="text-sm font-medium">{totalLikes}</span>
                 </div>
               </div>
             </div>
@@ -97,13 +129,34 @@ export const OrganizerDashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900">Event Categories</h3>
               <PieChart className="w-5 h-5 text-gray-400" />
             </div>
-            <div className="flex items-center justify-center h-32">
-              <div className="text-center text-gray-500">
-                <PieChart className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No events yet</p>
-                <p className="text-xs">Create your first event to see analytics</p>
+            {topCategories.length > 0 ? (
+              <div className="space-y-3">
+                {topCategories.map(([category, count], index) => {
+                  const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500'];
+                  const percentage = totalEvents > 0 ? Math.round((count / totalEvents) * 100) : 0;
+                  return (
+                    <div key={category} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-3 h-3 rounded-full ${colors[index]}`}></div>
+                        <span className="text-sm text-gray-600">{category}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-medium">{count}</span>
+                        <span className="text-xs text-gray-500">({percentage}%)</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center justify-center h-32">
+                <div className="text-center text-gray-500">
+                  <PieChart className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No events yet</p>
+                  <p className="text-xs">Create your first event to see analytics</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -132,7 +185,10 @@ export const OrganizerDashboard: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6 mt-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center justify-center space-x-2 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+            <button
+              onClick={onCreateEvent}
+              className="flex items-center justify-center space-x-2 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
               <Calendar className="w-5 h-5 text-gray-400" />
               <span className="text-sm font-medium text-gray-600">Create Event</span>
             </button>
