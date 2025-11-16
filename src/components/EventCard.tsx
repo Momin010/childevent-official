@@ -10,7 +10,7 @@ interface EventCardProps {
   onLike: (eventId: string) => void;
   onBookmark: (eventId: string) => void;
   onComment: (eventId: string) => void;
-  onShare: (eventId: string) => void;
+  onShare: (event: Event) => void;
   onOrganizerClick: (organizerId: string) => void;
   isBookmarked: boolean;
   isLoved: boolean;
@@ -125,7 +125,7 @@ export const EventCard: React.FC<EventCardProps> = ({
             whileTap={{ scale: 0.95 }}
             onClick={(e) => {
               e.stopPropagation();
-              onShare(event.id);
+              onShare(event);
             }}
             className="flex items-center text-gray-500 hover:text-blue-500 transition-colors duration-200"
           >

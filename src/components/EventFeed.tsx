@@ -10,7 +10,7 @@ interface EventFeedProps {
   onLike: (eventId: string) => void;
   onBookmark: (eventId: string) => void;
   onComment: (eventId: string) => void;
-  onShare: (eventId: string) => void;
+  onShare: (event: Event) => void;
   onOrganizerClick: (organizerId: string) => void;
   bookmarkedEvents: string[];
   lovedEvents: string[];

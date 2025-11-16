@@ -345,9 +345,19 @@ export const getOrganizerEvents = async (organizerId: string): Promise<Event[]> 
 // Increment event clicks
 export const incrementEventClicks = async (eventId: string): Promise<void> => {
   try {
+    // First get current count
+    const { data: currentEvent, error: fetchError } = await supabase
+      .from('events')
+      .select('clicks_count')
+      .eq('id', eventId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // Then update with incremented count
     const { error } = await supabase
       .from('events')
-      .update({ clicks_count: supabase.sql`clicks_count + 1` })
+      .update({ clicks_count: (currentEvent.clicks_count || 0) + 1 })
       .eq('id', eventId);
 
     if (error) throw error;
