@@ -10,7 +10,8 @@ import { getUnreadMessageCount } from '../lib/chat';
 import { getCurrentSession, getUserProfile } from '../lib/auth';
 import { useAppStore } from '../store/appStore';
 import { useToast } from '../hooks/useToast';
-import type { User } from '../types';
+import { EventCreationForm } from './EventCreationForm';
+import type { User, Event } from '../types';
 
 interface OrganizerAppProps {
   user?: User;
@@ -22,6 +23,7 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(initialUser || null);
   const [loading, setLoading] = useState(!initialUser);
+  const [showEventForm, setShowEventForm] = useState(false);
   const {
     activeTab,
     setActiveTab,
@@ -86,12 +88,50 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
     }
   };
 
+  const handleEventCreated = async (eventData: any) => {
+    // TODO: Implement event creation API call
+    console.log('Creating event:', eventData);
+    // For now, just close the form
+    setShowEventForm(false);
+  };
+
   const renderContent = () => {
+    if (showEventForm) {
+      return (
+        <EventCreationForm
+          onEventCreated={handleEventCreated}
+          onCancel={() => setShowEventForm(false)}
+          organizer={{
+            id: user?.id || '',
+            name: user?.organizationName || user?.name || '',
+            profilePicture: user?.profilePicture,
+          }}
+        />
+      );
+    }
+
     switch (currentPage) {
       case 'home':
         return <OrganizerDashboard />;
       case 'events':
-        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">My Events</h2><p>Event management coming soon...</p></div>;
+        return (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">My Events</h2>
+              <button
+                onClick={() => setShowEventForm(true)}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 flex items-center gap-2"
+              >
+                <span>+</span>
+                Create Event
+              </button>
+            </div>
+            <div className="text-center py-12 text-gray-500">
+              <p>No events created yet.</p>
+              <p className="text-sm mt-2">Click "Create Event" to get started!</p>
+            </div>
+          </div>
+        );
       case 'calendar':
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Event Calendar</h2><p>Calendar view coming soon...</p></div>;
       case 'profile':
