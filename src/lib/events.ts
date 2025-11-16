@@ -312,29 +312,22 @@ export const createEvent = async (eventData: {
 // Get events created by a specific organizer
 export const getOrganizerEvents = async (organizerId: string): Promise<Event[]> => {
   try {
-    // First get the events
-    const { data: eventsData, error: eventsError } = await supabase
+    const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select(`
+        *,
+        profiles!events_organizer_id_fkey (
+          id,
+          name,
+          profile_picture
+        )
+      `)
       .eq('organizer_id', organizerId)
       .order('created_at', { ascending: false });
 
-    if (eventsError) throw eventsError;
+    if (error) throw error;
 
-    // Then get the organizer profile
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, name, profile_picture')
-      .eq('id', organizerId)
-      .eq('is_organizer', true)
-      .single();
-
-    if (profileError) {
-      console.warn('Organizer profile not found:', profileError);
-      // Use default organizer data if profile not found
-    }
-
-    return eventsData.map(event => ({
+    return data.map(event => ({
       id: event.id,
       title: event.title,
       description: event.description,
@@ -343,9 +336,9 @@ export const getOrganizerEvents = async (organizerId: string): Promise<Event[]> 
       time: event.time,
       location: event.location,
       organizer: {
-        id: organizerId,
-        name: profileData?.name || 'Unknown Organizer',
-        profilePicture: profileData?.profile_picture || null,
+        id: event.profiles.id,
+        name: event.profiles.name,
+        profilePicture: event.profiles.profile_picture,
         followers: 0, // Will be calculated separately
         events: 0, // Will be calculated separately
       },
