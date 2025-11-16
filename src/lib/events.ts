@@ -3,50 +3,43 @@ import type { Event } from '../types';
 
 // Get all events
 export const getEvents = async (): Promise<Event[]> => {
-try {
-  const { data, error } = await supabase
-    .from('events')
-    .select(`
-      *,
-      profiles!events_organizer_id_fkey (
-        id,
-        name,
-        profile_picture
-      )
-    `)
-    .order('date', { ascending: true });
+  try {
+    const { data, error } = await supabase
+      .from('events_with_profiles')
+      .select('*')
+      .order('date', { ascending: true });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return data.map(event => ({
-    id: event.id,
-    title: event.title,
-    description: event.description,
-    imageUrl: event.image_url,
-    date: event.date,
-    time: event.time,
-    location: event.location,
-    organizer: {
-      id: event.profiles.id,
-      name: event.profiles.name,
-      profilePicture: event.profiles.profile_picture,
-      followers: 0, // Will be calculated separately
-      events: 0, // Will be calculated separately
-    },
-    interestedCount: event.signups_count || 0,
-    goingCount: event.signups_count || 0, // Using signups as going count
-    likes: event.likes_count || 0,
-    comments: [], // Will be loaded separately if needed
-    attendees: [], // Will be loaded separately if needed
-    isBookmarked: false, // Will be set based on user data
-    isLoved: false, // Will be set based on user data
-    clicks: event.clicks_count || 0,
-    createdAt: event.created_at,
-  }));
-} catch (error) {
-  console.error('Error fetching events:', error);
-  return [];
-}
+    return data.map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      imageUrl: event.image_url,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      organizer: {
+        id: event.organizer_id,
+        name: event.organizer_name,
+        profilePicture: event.organizer_profile_picture,
+        followers: 0, // Will be calculated separately
+        events: 0, // Will be calculated separately
+      },
+      interestedCount: event.signups_count || 0,
+      goingCount: event.signups_count || 0, // Using signups as going count
+      likes: event.likes_count || 0,
+      comments: [], // Will be loaded separately if needed
+      attendees: [], // Will be loaded separately if needed
+      isBookmarked: false, // Will be set based on user data
+      isLoved: false, // Will be set based on user data
+      clicks: event.clicks_count || 0,
+      createdAt: event.created_at,
+    }));
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return [];
+  }
 };
 
 // Get user's bookmarked events
