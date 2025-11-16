@@ -234,6 +234,7 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
           <CalendarSection
             events={events.filter(event => userAttending.includes(event.id))}
             onEventClick={handleEventClick}
+            userRole="user"
           />
         );
       case 'profile':

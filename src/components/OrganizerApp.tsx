@@ -11,6 +11,7 @@ import { getCurrentSession, getUserProfile } from '../lib/auth';
 import { useAppStore } from '../store/appStore';
 import { useToast } from '../hooks/useToast';
 import { EventCreationForm } from './EventCreationForm';
+import { CalendarSection } from './CalendarSection';
 import type { User, Event } from '../types';
 
 interface OrganizerAppProps {
@@ -133,7 +134,13 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
           </div>
         );
       case 'calendar':
-        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Event Calendar</h2><p>Calendar view coming soon...</p></div>;
+        return (
+          <CalendarSection
+            events={[]} // TODO: Pass events created by this organizer
+            onEventClick={(event) => console.log('Event clicked:', event)}
+            userRole="organizer"
+          />
+        );
       case 'profile':
         return (
           <ProfileSection

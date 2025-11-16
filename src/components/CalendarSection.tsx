@@ -8,11 +8,13 @@ import type { Event } from '../types';
 interface CalendarSectionProps {
   events: Event[];
   onEventClick: (event: Event) => void;
+  userRole?: 'user' | 'organizer';
 }
 
 export const CalendarSection: React.FC<CalendarSectionProps> = ({
   events,
   onEventClick,
+  userRole = 'user',
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
@@ -37,7 +39,9 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
         <div className="grid md:grid-cols-2 gap-8">
           {/* Calendar */}
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-semibold mb-6">Your Event Calendar</h2>
+            <h2 className="text-2xl font-semibold mb-6">
+              {userRole === 'organizer' ? 'Event Management Calendar' : 'Your Event Calendar'}
+            </h2>
             <Calendar
               onChange={setSelectedDate}
               value={selectedDate}
@@ -49,12 +53,17 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
           {/* Events for Selected Date */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-2xl font-semibold mb-6">
-              Events for {format(selectedDate, 'MMMM d, yyyy')}
+              {userRole === 'organizer' ? 'Your Events' : 'Events'} for {format(selectedDate, 'MMMM d, yyyy')}
             </h2>
-            
+
             {selectedEvents.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">No events scheduled for this date.</p>
+                <p className="text-gray-500">
+                  {userRole === 'organizer'
+                    ? 'No events scheduled for this date.'
+                    : 'No events you\'re attending on this date.'
+                  }
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
