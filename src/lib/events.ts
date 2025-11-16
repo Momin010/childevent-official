@@ -228,6 +228,130 @@ export const getEventAttendees = async (eventId: string) => {
   }
 };
 
+// Create new event
+export const createEvent = async (eventData: {
+  title: string;
+  description: string;
+  imageUrl: string;
+  date: string;
+  time: string;
+  location: string;
+  category?: string;
+  maxAttendees?: number;
+  price: number;
+  tags: string[];
+  organizerId: string;
+}): Promise<Event> => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .insert({
+        title: eventData.title,
+        description: eventData.description,
+        image_url: eventData.imageUrl,
+        date: eventData.date,
+        time: eventData.time,
+        location: eventData.location,
+        category: eventData.category,
+        max_attendees: eventData.maxAttendees,
+        price: eventData.price,
+        tags: eventData.tags,
+        organizer_id: eventData.organizerId,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Get organizer profile for the response
+    const { data: organizerData, error: orgError } = await supabase
+      .from('profiles')
+      .select('id, name, profile_picture')
+      .eq('id', eventData.organizerId)
+      .single();
+
+    if (orgError) throw orgError;
+
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      imageUrl: data.image_url,
+      date: data.date,
+      time: data.time,
+      location: data.location,
+      organizer: {
+        id: organizerData.id,
+        name: organizerData.name,
+        profilePicture: organizerData.profile_picture,
+        followers: 0, // Will be calculated separately
+        events: 0, // Will be calculated separately
+      },
+      interestedCount: 0,
+      goingCount: 0,
+      likes: 0,
+      comments: [],
+      attendees: [],
+      isBookmarked: false,
+      isLoved: false,
+      clicks: 0,
+      createdAt: data.created_at,
+    };
+  } catch (error) {
+    console.error('Error creating event:', error);
+    throw error;
+  }
+};
+
+// Get events created by a specific organizer
+export const getOrganizerEvents = async (organizerId: string): Promise<Event[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        *,
+        profiles!events_organizer_id_fkey (
+          id,
+          name,
+          profile_picture
+        )
+      `)
+      .eq('organizer_id', organizerId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return data.map(event => ({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      imageUrl: event.image_url,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      organizer: {
+        id: event.profiles.id,
+        name: event.profiles.name,
+        profilePicture: event.profiles.profile_picture,
+        followers: 0, // Will be calculated separately
+        events: 0, // Will be calculated separately
+      },
+      interestedCount: event.signups_count || 0,
+      goingCount: event.signups_count || 0, // Using signups as going count
+      likes: event.likes_count || 0,
+      comments: [], // Will be loaded separately if needed
+      attendees: [], // Will be loaded separately if needed
+      isBookmarked: false, // Will be set based on user data
+      isLoved: false, // Will be set based on user data
+      clicks: event.clicks_count || 0,
+      createdAt: event.created_at,
+    }));
+  } catch (error) {
+    console.error('Error fetching organizer events:', error);
+    return [];
+  }
+};
+
 // Increment event clicks
 export const incrementEventClicks = async (eventId: string): Promise<void> => {
   try {

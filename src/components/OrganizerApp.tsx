@@ -12,6 +12,7 @@ import { useAppStore } from '../store/appStore';
 import { useToast } from '../hooks/useToast';
 import { EventCreationForm } from './EventCreationForm';
 import { CalendarSection } from './CalendarSection';
+import { createEvent, getOrganizerEvents } from '../lib/events';
 import type { User, Event } from '../types';
 
 interface OrganizerAppProps {
@@ -25,6 +26,7 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
   const [user, setUser] = useState<User | null>(initialUser || null);
   const [loading, setLoading] = useState(!initialUser);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [organizerEvents, setOrganizerEvents] = useState<Event[]>([]);
   const {
     activeTab,
     setActiveTab,
@@ -49,6 +51,7 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
       loadUser();
     } else if (user) {
       loadUnreadMessages();
+      loadOrganizerEvents();
     }
   }, [user, loading]);
 
@@ -96,11 +99,34 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
     }
   };
 
+  const loadOrganizerEvents = async () => {
+    if (!user) return;
+    try {
+      const events = await getOrganizerEvents(user.id);
+      setOrganizerEvents(events);
+    } catch (error) {
+      console.error('Error loading organizer events:', error);
+    }
+  };
+
   const handleEventCreated = async (eventData: any) => {
-    // TODO: Implement event creation API call
-    console.log('Creating event:', eventData);
-    // For now, just close the form
-    setShowEventForm(false);
+    if (!user) return;
+
+    try {
+      const newEvent = await createEvent({
+        ...eventData,
+        organizerId: user.id,
+      });
+
+      // Add the new event to the list
+      setOrganizerEvents(prev => [newEvent, ...prev]);
+
+      // Close the form
+      setShowEventForm(false);
+    } catch (error) {
+      console.error('Error creating event:', error);
+      throw error; // Let the form handle the error display
+    }
   };
 
   const renderContent = () => {
@@ -134,16 +160,48 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
                 Create Event
               </button>
             </div>
-            <div className="text-center py-12 text-gray-500">
-              <p>No events created yet.</p>
-              <p className="text-sm mt-2">Click "Create Event" to get started!</p>
-            </div>
+            {organizerEvents.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No events created yet.</p>
+                <p className="text-sm mt-2">Click "Create Event" to get started!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {organizerEvents.map(event => (
+                  <div key={event.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                    <img
+                      src={event.imageUrl}
+                      alt={event.title}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="p-4">
+                      <h3 className="font-semibold text-lg mb-2">{event.title}</h3>
+                      <p className="text-gray-600 text-sm mb-2">{event.description}</p>
+                      <div className="flex items-center text-sm text-gray-500 mb-2">
+                        <span>{event.date} at {event.time}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <span>{event.location}</span>
+                      </div>
+                      <div className="mt-3 flex justify-between items-center">
+                        <span className="text-sm text-gray-500">
+                          {event.goingCount} attending
+                        </span>
+                        <span className="text-sm font-medium text-blue-600">
+                          ${event.price || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       case 'calendar':
         return (
           <CalendarSection
-            events={[]} // TODO: Pass events created by this organizer
+            events={organizerEvents}
             onEventClick={(event) => console.log('Event clicked:', event)}
             userRole="organizer"
           />
