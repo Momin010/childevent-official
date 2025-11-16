@@ -121,12 +121,62 @@ function App() {
                 )
               }
             />
+            <Route
+              path="/usercalendar"
+              element={
+                user && user.role === 'user' ? (
+                  <UserApp user={user} onSignOut={handleSignOut} />
+                ) : (
+                  <Navigate to="/userlogin" replace />
+                )
+              }
+            />
+            <Route
+              path="/userprofile"
+              element={
+                user && user.role === 'user' ? (
+                  <UserApp user={user} onSignOut={handleSignOut} />
+                ) : (
+                  <Navigate to="/userlogin" replace />
+                )
+              }
+            />
 
             {/* Organizer routes */}
             <Route path="/orglogin" element={<OrganizerLoginPage />} />
             <Route path="/orgonboarding" element={<OrganizerOnboardingPage />} />
             <Route
               path="/orghome"
+              element={
+                user && user.role === 'organizer' ? (
+                  <OrganizerApp user={user} onSignOut={handleSignOut} />
+                ) : (
+                  <Navigate to="/orglogin" replace />
+                )
+              }
+            />
+            <Route
+              path="/orgcalendar"
+              element={
+                user && user.role === 'organizer' ? (
+                  <OrganizerApp user={user} onSignOut={handleSignOut} />
+                ) : (
+                  <Navigate to="/orglogin" replace />
+                )
+              }
+            />
+            <Route
+              path="/orgprofile"
+              element={
+                user && user.role === 'organizer' ? (
+                  <OrganizerApp user={user} onSignOut={handleSignOut} />
+                ) : (
+                  <Navigate to="/orglogin" replace />
+                )
+              }
+            />
+            <Route
+              path="/orgevents"
               element={
                 user && user.role === 'organizer' ? (
                   <OrganizerApp user={user} onSignOut={handleSignOut} />

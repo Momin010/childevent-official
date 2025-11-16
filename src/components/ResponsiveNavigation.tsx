@@ -1,20 +1,28 @@
 import React from 'react';
-import { Home, Calendar, User, MessageCircle, Menu, X } from 'lucide-react';
+import { Home, Calendar, User, MessageCircle, Menu, X, Plus } from 'lucide-react';
 
 interface ResponsiveNavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   unreadMessages?: number;
+  isOrganizer?: boolean;
 }
 
 export const ResponsiveNavigation: React.FC<ResponsiveNavigationProps> = ({
   activeTab,
   onTabChange,
   unreadMessages = 0,
+  isOrganizer = false,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
-  const tabs = [
+  const tabs = isOrganizer ? [
+    { id: 'home', icon: Home, label: 'Dashboard' },
+    { id: 'events', icon: Plus, label: 'Events' },
+    { id: 'calendar', icon: Calendar, label: 'Calendar' },
+    { id: 'chat', icon: MessageCircle, label: 'Chat', badge: unreadMessages },
+    { id: 'profile', icon: User, label: 'Profile' },
+  ] : [
     { id: 'home', icon: Home, label: 'Home' },
     { id: 'calendar', icon: Calendar, label: 'Calendar' },
     { id: 'chat', icon: MessageCircle, label: 'Chat', badge: unreadMessages },

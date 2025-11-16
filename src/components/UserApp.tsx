@@ -9,6 +9,7 @@ import { ShareModal } from './ShareModal';
 import { OrganizerProfile } from './OrganizerProfile';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ToastContainer } from './Toast';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getUnreadMessageCount } from '../lib/chat';
 import { getEvents, getUserBookmarkedEvents, getUserLikedEvents, getUserAttendingEvents, toggleEventBookmark, toggleEventLike, signUpForEvent, incrementEventClicks } from '../lib/events';
 import { getCurrentSession, getUserProfile } from '../lib/auth';
@@ -22,6 +23,8 @@ interface UserAppProps {
 }
 
 export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(initialUser || null);
   const [loading, setLoading] = useState(!initialUser);
   const {
@@ -30,6 +33,9 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
     unreadMessages,
     setUnreadMessages,
   } = useAppStore();
+
+  // Determine current page from route
+  const currentPage = location.pathname.replace('/user', '') || 'home';
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -208,7 +214,7 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
       }
     }
 
-    switch (activeTab) {
+    switch (currentPage) {
       case 'home':
         return (
           <EventFeed
@@ -230,8 +236,6 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
             onEventClick={handleEventClick}
           />
         );
-      case 'chat':
-        return <ChatSection user={user} />;
       case 'profile':
         return (
           <ProfileSection
@@ -278,9 +282,9 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
       </div>
 
       <ResponsiveNavigation
-        activeTab={activeTab}
+        activeTab={currentPage}
         onTabChange={(tab) => {
-          setActiveTab(tab);
+          navigate(`/user${tab === 'home' ? '' : tab}`);
           setSelectedOrganizer(null);
         }}
         unreadMessages={unreadMessages}

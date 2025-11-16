@@ -5,6 +5,7 @@ import { ProfileSection } from './ProfileSection';
 import { ChatSection } from './ChatSection';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ToastContainer } from './Toast';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getUnreadMessageCount } from '../lib/chat';
 import { getCurrentSession, getUserProfile } from '../lib/auth';
 import { useAppStore } from '../store/appStore';
@@ -17,6 +18,8 @@ interface OrganizerAppProps {
 }
 
 export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, onSignOut }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(initialUser || null);
   const [loading, setLoading] = useState(!initialUser);
   const {
@@ -25,6 +28,9 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
     unreadMessages,
     setUnreadMessages,
   } = useAppStore();
+
+  // Determine current page from route
+  const currentPage = location.pathname.replace('/org', '') || 'home';
 
   const { toasts, removeToast } = useToast();
 
@@ -81,11 +87,13 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
   };
 
   const renderContent = () => {
-    switch (activeTab) {
+    switch (currentPage) {
       case 'home':
         return <OrganizerDashboard />;
-      case 'chat':
-        return <ChatSection user={user} />;
+      case 'events':
+        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">My Events</h2><p>Event management coming soon...</p></div>;
+      case 'calendar':
+        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Event Calendar</h2><p>Calendar view coming soon...</p></div>;
       case 'profile':
         return (
           <ProfileSection
@@ -120,9 +128,12 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
       </div>
 
       <ResponsiveNavigation
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        activeTab={currentPage}
+        onTabChange={(tab) => {
+          navigate(`/org${tab === 'home' ? '' : tab}`);
+        }}
         unreadMessages={unreadMessages}
+        isOrganizer={true}
       />
     </div>
   );
