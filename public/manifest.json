@@ -1,6 +1,7 @@
 {
-  "name": "EventConnect",
-  "short_name": "EventConnect",
+  "name": "ChildEvent",
+  "short_name": "ChildEvent",
+  "description": "Discover Amazing Events Near You",
   "start_url": "/",
   "display": "fullscreen",
   "background_color": "#ffffff",
@@ -9,14 +10,9 @@
   "scope": "/",
   "icons": [
     {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/logo.ico",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon"
     }
   ]
 }
