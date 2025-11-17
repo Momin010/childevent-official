@@ -27,7 +27,7 @@ export const UserLoginPage: React.FC = () => {
       if (session?.user) {
         const profile = await getUserProfile(session.user.id);
         if (profile && !profile.is_organizer) {
-          navigate('/userhome');
+          navigate('/user/home');
         }
       }
     };
@@ -79,7 +79,7 @@ export const UserLoginPage: React.FC = () => {
               return;
             }
             success('Welcome back!', 'You have successfully signed in.');
-            navigate('/userhome');
+            navigate('/user/home');
           } else {
             navigate('/useronboarding');
           }

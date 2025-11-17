@@ -72,7 +72,7 @@ export const UserOnboardingPage: React.FC = () => {
 
         await createUserProfile(session.user.id, profileData);
         success('Welcome to EventConnect!', 'Your profile has been created successfully.');
-        navigate('/userhome');
+        navigate('/user/home');
       } catch (err: any) {
         showError('Profile Creation Failed', err.message);
       } finally {
