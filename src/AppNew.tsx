@@ -155,7 +155,7 @@ function App() {
                 authLoading ? (
                   <LoadingScreen />
                 ) : user && user.role === 'user' ? (
-                  <UserApp user={user} onSignOut={handleSignOut} />
+                  <UserApp onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/userlogin" replace />
                 )

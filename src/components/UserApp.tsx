@@ -18,16 +18,14 @@ import { useToast } from '../hooks/useToast';
 import type { User, Event } from '../types';
 
 interface UserAppProps {
-  user?: User;
   onSignOut: () => void;
 }
 
-export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }) => {
-  console.log('UserApp mounted/re-rendered, initialUser:', initialUser);
+export const UserApp: React.FC<UserAppProps> = ({ onSignOut }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(initialUser || null);
-  const [loading, setLoading] = useState(!initialUser);
+  const { user, setUser } = useAppStore();
+  const [loading, setLoading] = useState(!user);
   const [loadAttempted, setLoadAttempted] = useState(false);
   const {
     activeTab,
