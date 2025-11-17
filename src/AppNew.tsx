@@ -31,21 +31,11 @@ function App() {
     </div>
   );
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
 
   // Auth state listener
   useEffect(() => {
-    const { data: { subscription } } = onAuthStateChange((event, session) => {
-      // FIX: set loading while session is stabilizing
-      setAuthLoading(true);
-
-      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
-        setUser(session?.user ?? null);
-        setAuthLoading(false);
-        return;
-      }
+    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.id);
 
       if (event === "SIGNED_OUT") {
         setUser(null);
@@ -53,7 +43,56 @@ function App() {
         return;
       }
 
-      // Default
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+        // Re-check auth status when session changes
+        if (session?.user) {
+          setAuthLoading(true);
+          try {
+            const profile = await getUserProfile(session.user.id);
+            if (profile) {
+              setUser({
+                id: profile.id,
+                username: profile.username,
+                name: profile.name,
+                age: profile.age,
+                isParent: profile.is_parent,
+                numberOfChildren: profile.number_of_children,
+                hobbies: profile.hobbies,
+                profilePicture: profile.profile_picture,
+                coverPhoto: profile.cover_photo,
+                bio: profile.bio,
+                friends: [],
+                bookedEvents: [],
+                attendedEvents: [],
+                bookmarkedEvents: [],
+                lovedEvents: [],
+                following: [],
+                role: profile.is_organizer ? 'organizer' : 'user',
+                organizationName: profile.organization_name,
+                industry: profile.industry,
+                website: profile.website,
+                roleInOrganization: profile.role,
+                organizerId: profile.organizer_id,
+                lastLogin: new Date().toISOString(),
+                theme: 'light',
+              });
+            } else {
+              setUser(null);
+            }
+          } catch (error) {
+            console.error('Auth listener profile fetch error:', error);
+            setUser(null);
+          } finally {
+            setAuthLoading(false);
+          }
+        } else {
+          setUser(null);
+          setAuthLoading(false);
+        }
+        return;
+      }
+
+      // For other events, just ensure loading is false
       setAuthLoading(false);
     });
 
@@ -63,46 +102,6 @@ function App() {
   }, []);
 
 
-  const checkAuthStatus = async () => {
-    try {
-      const session = await getCurrentSession();
-      if (session?.user) {
-        const profile = await getUserProfile(session.user.id);
-        if (profile) {
-          setUser({
-            id: profile.id,
-            username: profile.username,
-            name: profile.name,
-            age: profile.age,
-            isParent: profile.is_parent,
-            numberOfChildren: profile.number_of_children,
-            hobbies: profile.hobbies,
-            profilePicture: profile.profile_picture,
-            coverPhoto: profile.cover_photo,
-            bio: profile.bio,
-            friends: [],
-            bookedEvents: [],
-            attendedEvents: [],
-            bookmarkedEvents: [],
-            lovedEvents: [],
-            following: [],
-            role: profile.is_organizer ? 'organizer' : 'user',
-            organizationName: profile.organization_name,
-            industry: profile.industry,
-            website: profile.website,
-            roleInOrganization: profile.role,
-            organizerId: profile.organizer_id,
-            lastLogin: new Date().toISOString(),
-            theme: 'light',
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
 
   const handleSignOut = async () => {
     try {
