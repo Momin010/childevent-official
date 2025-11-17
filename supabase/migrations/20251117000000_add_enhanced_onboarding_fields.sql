@@ -1,9 +1,24 @@
--- Add enhanced onboarding fields and profile image fields to profiles table
+-- Add comprehensive enhanced onboarding fields and profile system fields to profiles table
 -- Migration: 20251117000000_add_enhanced_onboarding_fields
 
--- Add profile image fields
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profile_picture text;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS cover_photo text;
+-- Add role and email fields (if missing)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'organizer', 'admin'));
+
+-- Add notification preferences
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email_notifications boolean DEFAULT true;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS push_notifications boolean DEFAULT true;
+
+-- Add location and additional profile fields
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS website text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone text;
+
+-- Add organizer-specific fields
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS organization_name text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS industry text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS role_in_organization text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_organizer boolean DEFAULT false;
 
 -- Add enhanced onboarding preference fields
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS event_types jsonb DEFAULT '[]'::jsonb;
@@ -11,10 +26,32 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS activity_preferences jsonb DEFAULT
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS dietary_restrictions jsonb DEFAULT '[]'::jsonb;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS accessibility_needs jsonb DEFAULT '[]'::jsonb;
 
--- Add hobbies field (if not already exists)
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS hobbies jsonb DEFAULT '[]'::jsonb;
+-- Ensure hobbies is jsonb (convert if needed)
+DO $$
+BEGIN
+  -- Check if hobbies column exists and is not jsonb
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'profiles' AND column_name = 'hobbies' AND data_type != 'jsonb'
+  ) THEN
+    -- Convert text[] to jsonb
+    ALTER TABLE profiles ALTER COLUMN hobbies TYPE jsonb USING array_to_json(hobbies);
+  ELSIF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'profiles' AND column_name = 'hobbies'
+  ) THEN
+    -- Add hobbies column if it doesn't exist
+    ALTER TABLE profiles ADD COLUMN hobbies jsonb DEFAULT '[]'::jsonb;
+  END IF;
+END $$;
 
--- Create indexes for the new jsonb fields for better query performance
+-- Add analytics and tracking fields
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_login_at timestamp with time zone;
+
+-- Create indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
+CREATE INDEX IF NOT EXISTS idx_profiles_is_organizer ON profiles(is_organizer);
 CREATE INDEX IF NOT EXISTS idx_profiles_event_types ON profiles USING gin(event_types);
 CREATE INDEX IF NOT EXISTS idx_profiles_activity_preferences ON profiles USING gin(activity_preferences);
 CREATE INDEX IF NOT EXISTS idx_profiles_dietary_restrictions ON profiles USING gin(dietary_restrictions);
