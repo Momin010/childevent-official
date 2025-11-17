@@ -150,7 +150,7 @@ function App() {
             <Route path="/userlogin" element={<UserLoginPage />} />
             <Route path="/useronboarding" element={<UserOnboardingPage />} />
             <Route
-              path="/user*"
+              path="/user/*"
               element={
                 authLoading ? (
                   <LoadingScreen />
@@ -166,7 +166,7 @@ function App() {
             <Route path="/orglogin" element={<OrganizerLoginPage />} />
             <Route path="/orgonboarding" element={<OrganizerOnboardingPage />} />
             <Route
-              path="/org*"
+              path="/org/*"
               element={
                 authLoading ? (
                   <LoadingScreen />
