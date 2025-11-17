@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ChoicePage } from './components/ChoicePage';
 import { UserLoginPage } from './components/UserLoginPage';
@@ -22,6 +22,7 @@ import type { User } from './types';
 function App() {
   const { toasts, removeToast } = useToast();
   const { user, setUser, authLoading, setAuthLoading } = useAppStore();
+  const authCheckRef = useRef(false);
 
   useEffect(() => {
     checkAuthStatus();
@@ -30,8 +31,11 @@ function App() {
   // Re-check auth status when navigating to user or organizer routes
   useEffect(() => {
     const currentPath = location.pathname;
-    if ((currentPath.startsWith('/user') || currentPath.startsWith('/org')) && !user) {
-      checkAuthStatus();
+    if ((currentPath.startsWith('/user') || currentPath.startsWith('/org')) && !user && !authCheckRef.current) {
+      authCheckRef.current = true;
+      checkAuthStatus().finally(() => {
+        authCheckRef.current = false;
+      });
     }
   }, [location.pathname, user]);
 
