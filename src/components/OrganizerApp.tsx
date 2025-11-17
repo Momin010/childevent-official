@@ -16,15 +16,14 @@ import { createEvent, getOrganizerEvents } from '../lib/events';
 import type { User, Event } from '../types';
 
 interface OrganizerAppProps {
-  user?: User;
   onSignOut: () => void;
 }
 
-export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, onSignOut }) => {
+export const OrganizerApp: React.FC<OrganizerAppProps> = ({ onSignOut }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(initialUser || null);
-  const [loading, setLoading] = useState(!initialUser);
+  const { user, setUser } = useAppStore();
+  const [loading, setLoading] = useState(!user);
   const [showEventForm, setShowEventForm] = useState(false);
   const [organizerEvents, setOrganizerEvents] = useState<Event[]>([]);
   const {

@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Loader2, Building } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { signIn, signUp, getCurrentSession, getUserProfile } from '../lib/auth';
+import { useAppStore } from '../store/appStore';
 import { useToast } from '../hooks/useToast';
 import type { LoginCredentials, SignUpCredentials } from '../lib/auth';
 
 export const OrganizerLoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { setUser } = useAppStore();
   const { success, error: showError } = useToast();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [formData, setFormData] = useState({
@@ -27,12 +29,39 @@ export const OrganizerLoginPage: React.FC = () => {
       if (session?.user) {
         const profile = await getUserProfile(session.user.id);
         if (profile && profile.is_organizer) {
-          navigate('/orghome');
+          // Set user in global store before navigating
+          setUser({
+            id: profile.id,
+            username: profile.username,
+            name: profile.name,
+            age: profile.age,
+            isParent: profile.is_parent,
+            numberOfChildren: profile.number_of_children,
+            hobbies: profile.hobbies,
+            profilePicture: profile.profile_picture,
+            coverPhoto: profile.cover_photo,
+            bio: profile.bio,
+            friends: [],
+            bookedEvents: [],
+            attendedEvents: [],
+            bookmarkedEvents: [],
+            lovedEvents: [],
+            following: [],
+            role: 'organizer',
+            organizationName: profile.organization_name,
+            industry: profile.industry,
+            website: profile.website,
+            roleInOrganization: profile.role,
+            organizerId: profile.organizer_id,
+            lastLogin: new Date().toISOString(),
+            theme: 'light',
+          });
+          navigate('/org/home');
         }
       }
     };
     checkSession();
-  }, [navigate]);
+  }, [navigate, setUser]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -89,10 +118,10 @@ export const OrganizerLoginPage: React.FC = () => {
             theme: 'light',
             organizerId: 'ORG-' + Date.now(),
           };
-          // Store in localStorage for persistence
-          localStorage.setItem('testOrganizerUser', JSON.stringify(mockUser));
+          // Set user in global store
+          setUser(mockUser);
           success('Welcome back!', 'Test organizer account loaded successfully.');
-          navigate('/orghome');
+          navigate('/org/home');
           return;
         }
 
@@ -118,8 +147,35 @@ export const OrganizerLoginPage: React.FC = () => {
                     ...profile,
                     is_organizer: true,
                   });
+                  // Set user in global store
+                  setUser({
+                    id: profile.id,
+                    username: profile.username,
+                    name: profile.name,
+                    age: profile.age,
+                    isParent: profile.is_parent,
+                    numberOfChildren: profile.number_of_children,
+                    hobbies: profile.hobbies,
+                    profilePicture: profile.profile_picture,
+                    coverPhoto: profile.cover_photo,
+                    bio: profile.bio,
+                    friends: [],
+                    bookedEvents: [],
+                    attendedEvents: [],
+                    bookmarkedEvents: [],
+                    lovedEvents: [],
+                    following: [],
+                    role: 'organizer',
+                    organizationName: profile.organization_name,
+                    industry: profile.industry,
+                    website: profile.website,
+                    roleInOrganization: profile.role,
+                    organizerId: profile.organizer_id,
+                    lastLogin: new Date().toISOString(),
+                    theme: 'light',
+                  });
                   success('Account Updated!', 'Your account has been upgraded to organizer status.');
-                  navigate('/orghome');
+                  navigate('/org/home');
                   return;
                 } catch (updateError) {
                   console.error('Failed to update organizer status:', updateError);
@@ -136,13 +192,35 @@ export const OrganizerLoginPage: React.FC = () => {
               }, 2000);
               return;
             }
+            // Set user in global store
+            setUser({
+              id: profile.id,
+              username: profile.username,
+              name: profile.name,
+              age: profile.age,
+              isParent: profile.is_parent,
+              numberOfChildren: profile.number_of_children,
+              hobbies: profile.hobbies,
+              profilePicture: profile.profile_picture,
+              coverPhoto: profile.cover_photo,
+              bio: profile.bio,
+              friends: [],
+              bookedEvents: [],
+              attendedEvents: [],
+              bookmarkedEvents: [],
+              lovedEvents: [],
+              following: [],
+              role: 'organizer',
+              organizationName: profile.organization_name,
+              industry: profile.industry,
+              website: profile.website,
+              roleInOrganization: profile.role,
+              organizerId: profile.organizer_id,
+              lastLogin: new Date().toISOString(),
+              theme: 'light',
+            });
             success('Welcome back!', 'You have successfully signed in.');
-            setIsLoading(false); // Reset loading state before navigation
-
-            // Force navigation after a short delay to ensure it works
-            setTimeout(() => {
-              navigate('/orghome');
-            }, 100);
+            navigate('/org/home');
           } else {
             showError('Profile Not Found', 'Your organizer profile could not be found.');
           }

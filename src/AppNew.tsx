@@ -171,7 +171,7 @@ function App() {
                 authLoading ? (
                   <LoadingScreen />
                 ) : user && user.role === 'organizer' ? (
-                  <OrganizerApp user={user} onSignOut={handleSignOut} />
+                  <OrganizerApp onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/orglogin" replace />
                 )
