@@ -178,14 +178,14 @@ export const getCurrentSession = async () => {
 };
 
 // Listen to auth state change
-export const onAuthStateChange = (callback: (session: any) => void) => {
+export const onAuthStateChange = (callback: (event: string, session: any) => void) => {
   if (!supabase) {
     throw new Error(AUTH_ERRORS.NOT_CONFIGURED);
   }
 
   return supabase.auth.onAuthStateChange((event, session) => {
     console.log('Auth state changed:', event);
-    callback(session);
+    callback(event, session);
   });
 };
 

@@ -53,7 +53,7 @@ export const useAppStore = create<AppState>()(
         unreadMessages: 0,
 
         // Actions
-        setUser: (user) => set({ user, isAuthenticated: !!user }),
+        setUser: (user) => set({ user, isAuthenticated: !!user, authLoading: false }),
         setAuthLoading: (authLoading) => set({ authLoading }),
         setActiveTab: (activeTab) => set({ activeTab }),
         setTheme: (theme) => set({ theme }),

@@ -14,7 +14,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast';
 import { isSupabaseConfigured } from './lib/supabase';
-import { getCurrentSession, getUserProfile, signOut } from './lib/auth';
+import { getCurrentSession, getUserProfile, signOut, onAuthStateChange } from './lib/auth';
 import { useAppStore } from './store/appStore';
 import { useToast } from './hooks/useToast';
 import type { User } from './types';
@@ -24,20 +24,44 @@ function App() {
   const { user, setUser, authLoading, setAuthLoading } = useAppStore();
   const authCheckRef = useRef(false);
 
+  // Loading screen component
+  const LoadingScreen = () => (
+    <div className="min-h-screen flex items-center justify-center">
+      <LoadingSpinner size="lg" text="Loading..." />
+    </div>
+  );
+
   useEffect(() => {
     checkAuthStatus();
   }, []);
 
-  // Re-check auth status when navigating to user or organizer routes
+  // Auth state listener
   useEffect(() => {
-    const currentPath = location.pathname;
-    if ((currentPath.startsWith('/user') || currentPath.startsWith('/org')) && !user && !authCheckRef.current) {
-      authCheckRef.current = true;
-      checkAuthStatus().finally(() => {
-        authCheckRef.current = false;
-      });
-    }
-  }, [location.pathname]);
+    const { data: { subscription } } = onAuthStateChange((event, session) => {
+      // FIX: set loading while session is stabilizing
+      setAuthLoading(true);
+
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+        setUser(session?.user ?? null);
+        setAuthLoading(false);
+        return;
+      }
+
+      if (event === "SIGNED_OUT") {
+        setUser(null);
+        setAuthLoading(false);
+        return;
+      }
+
+      // Default
+      setAuthLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
 
   const checkAuthStatus = async () => {
     try {
@@ -128,7 +152,9 @@ function App() {
             <Route
               path="/userhome"
               element={
-                user && user.role === 'user' ? (
+                authLoading ? (
+                  <LoadingScreen />
+                ) : user && user.role === 'user' ? (
                   <UserApp user={user} onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/userlogin" replace />
@@ -138,7 +164,9 @@ function App() {
             <Route
               path="/usercalendar"
               element={
-                user && user.role === 'user' ? (
+                authLoading ? (
+                  <LoadingScreen />
+                ) : user && user.role === 'user' ? (
                   <UserApp user={user} onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/userlogin" replace />
@@ -148,7 +176,9 @@ function App() {
             <Route
               path="/userprofile"
               element={
-                user && user.role === 'user' ? (
+                authLoading ? (
+                  <LoadingScreen />
+                ) : user && user.role === 'user' ? (
                   <UserApp user={user} onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/userlogin" replace />
@@ -158,7 +188,9 @@ function App() {
             <Route
               path="/userchat"
               element={
-                user && user.role === 'user' ? (
+                authLoading ? (
+                  <LoadingScreen />
+                ) : user && user.role === 'user' ? (
                   <UserApp user={user} onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/userlogin" replace />
@@ -176,7 +208,9 @@ function App() {
             <Route
               path="/orgcalendar"
               element={
-                user && user.role === 'organizer' ? (
+                authLoading ? (
+                  <LoadingScreen />
+                ) : user && user.role === 'organizer' ? (
                   <OrganizerApp user={user} onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/orglogin" replace />
@@ -186,7 +220,9 @@ function App() {
             <Route
               path="/orgprofile"
               element={
-                user && user.role === 'organizer' ? (
+                authLoading ? (
+                  <LoadingScreen />
+                ) : user && user.role === 'organizer' ? (
                   <OrganizerApp user={user} onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/orglogin" replace />
@@ -196,7 +232,9 @@ function App() {
             <Route
               path="/orgevents"
               element={
-                user && user.role === 'organizer' ? (
+                authLoading ? (
+                  <LoadingScreen />
+                ) : user && user.role === 'organizer' ? (
                   <OrganizerApp user={user} onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/orglogin" replace />
@@ -206,7 +244,9 @@ function App() {
             <Route
               path="/orgchat"
               element={
-                user && user.role === 'organizer' ? (
+                authLoading ? (
+                  <LoadingScreen />
+                ) : user && user.role === 'organizer' ? (
                   <OrganizerApp user={user} onSignOut={handleSignOut} />
                 ) : (
                   <Navigate to="/orglogin" replace />
