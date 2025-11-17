@@ -1,10 +1,12 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
-import { Camera, Users, Calendar, Bookmark, Heart, Edit, Plus, LogOut, MessageCircle } from 'lucide-react';
+import { Camera, Users, Calendar, Bookmark, Heart, Edit, Plus, LogOut, MessageCircle, Loader2 } from 'lucide-react';
 import { FriendSuggestionsModal } from './FriendSuggestionsModal';
 import type { User, Event } from '../types';
-import { signOut, setupTestUserFriendshipAndChat } from '../lib/auth';
+import { signOut, setupTestUserFriendshipAndChat, updateUserProfile } from '../lib/auth';
+import { uploadProfilePicture, uploadCoverPhoto, validateImageFile } from '../lib/storage';
+import { useToast } from '../hooks/useToast';
 
 interface ProfileSectionProps {
   user: User;
@@ -22,6 +24,9 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
   onSignOut,
 }) => {
   const [isFriendModalOpen, setIsFriendModalOpen] = useState(false);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const { success, error: showError } = useToast();
 
   const handleSetupTestChat = async () => {
     try {
@@ -37,28 +42,53 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
     }
   };
 
-  const onDropProfilePicture = useCallback((acceptedFiles: File[]) => {
-    // In a real app, you would upload this to a server
+  const onDropProfilePicture = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        onUpdateProfile({ profilePicture: e.target?.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  }, [onUpdateProfile]);
+    if (!file) return;
 
-  const onDropCoverPhoto = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        onUpdateProfile({ coverPhoto: e.target?.result as string });
-      };
-      reader.readAsDataURL(file);
+    // Validate file
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      showError('Upload Error', validation.error!);
+      return;
     }
-  }, [onUpdateProfile]);
+
+    setUploadingProfile(true);
+    try {
+      const result = await uploadProfilePicture(file, user.id);
+      await updateUserProfile(user.id, { profile_picture: result.url });
+      onUpdateProfile({ profilePicture: result.url });
+      success('Profile picture updated successfully!');
+    } catch (error: any) {
+      showError('Upload Failed', error.message || 'Failed to upload profile picture');
+    } finally {
+      setUploadingProfile(false);
+    }
+  }, [user.id, onUpdateProfile, success, showError]);
+
+  const onDropCoverPhoto = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (!file) return;
+
+    // Validate file
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      showError('Upload Error', validation.error!);
+      return;
+    }
+
+    setUploadingCover(true);
+    try {
+      const result = await uploadCoverPhoto(file, user.id);
+      await updateUserProfile(user.id, { cover_photo: result.url });
+      onUpdateProfile({ coverPhoto: result.url });
+      success('Cover photo updated successfully!');
+    } catch (error: any) {
+      showError('Upload Failed', error.message || 'Failed to upload cover photo');
+    } finally {
+      setUploadingCover(false);
+    }
+  }, [user.id, onUpdateProfile, success, showError]);
 
   const { getRootProps: getProfilePicProps, getInputProps: getProfilePicInputProps } = useDropzone({
     onDrop: onDropProfilePicture,
@@ -88,7 +118,11 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
         {...getCoverProps()}
         className="relative h-64 bg-gray-200 cursor-pointer group"
       >
-        {user.coverPhoto ? (
+        {uploadingCover ? (
+          <div className="w-full h-full flex items-center justify-center bg-gray-300">
+            <Loader2 className="w-8 h-8 text-gray-600 animate-spin" />
+          </div>
+        ) : user.coverPhoto ? (
           <img
             src={user.coverPhoto}
             alt="Cover"
@@ -111,7 +145,11 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({
           {...getProfilePicProps()}
           className="absolute -top-16 left-4 w-32 h-32 rounded-full border-4 border-white bg-gray-200 cursor-pointer group overflow-hidden"
         >
-          {user.profilePicture ? (
+          {uploadingProfile ? (
+            <div className="w-full h-full flex items-center justify-center bg-gray-300">
+              <Loader2 className="w-8 h-8 text-gray-600 animate-spin" />
+            </div>
+          ) : user.profilePicture ? (
             <img
               src={user.profilePicture}
               alt={user.name}

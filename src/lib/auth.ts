@@ -411,6 +411,30 @@ export const getUserProfile = async (userId: string) => {
   }
 };
 
+// Update user profile
+export const updateUserProfile = async (userId: string, updates: any) => {
+  try {
+    if (!supabase) {
+      throw new Error(AUTH_ERRORS.NOT_CONFIGURED);
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    throw new Error(handleAuthError(error));
+  }
+};
+
 // Get user profile by username
 export const getUserProfileByUsername = async (username: string) => {
   try {
