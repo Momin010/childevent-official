@@ -15,22 +15,22 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastContainer } from './components/Toast';
 import { isSupabaseConfigured } from './lib/supabase';
 import { getCurrentSession, getUserProfile, signOut } from './lib/auth';
+import { useAppStore } from './store/appStore';
 import { useToast } from './hooks/useToast';
 import type { User } from './types';
 
 function App() {
   const { toasts, removeToast } = useToast();
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { user, setUser, authLoading, setAuthLoading } = useAppStore();
 
   useEffect(() => {
     checkAuthStatus();
   }, []);
 
-  // Re-check auth status when navigating to organizer routes
+  // Re-check auth status when navigating to user or organizer routes
   useEffect(() => {
     const currentPath = location.pathname;
-    if (currentPath.startsWith('/org') && !user) {
+    if ((currentPath.startsWith('/user') || currentPath.startsWith('/org')) && !user) {
       checkAuthStatus();
     }
   }, [location.pathname, user]);
