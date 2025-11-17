@@ -35,14 +35,9 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
   } = useAppStore();
 
   // Determine current page from route
-  const routeToPageMap = {
-    '/orghome': 'home',
-    '/orgevents': 'events',
-    '/orgcalendar': 'calendar',
-    '/orgchat': 'chat',
-    '/orgprofile': 'profile'
-  };
-  const currentPage = routeToPageMap[location.pathname as keyof typeof routeToPageMap] || 'home';
+  const pathParts = location.pathname.split('/');
+  const lastPath = pathParts[pathParts.length - 1] || 'home';
+  const currentPage = ['home', 'events', 'calendar', 'chat', 'profile'].includes(lastPath) ? lastPath : 'home';
 
   const { toasts, removeToast } = useToast();
 
@@ -267,13 +262,13 @@ export const OrganizerApp: React.FC<OrganizerAppProps> = ({ user: initialUser, o
         activeTab={currentPage}
         onTabChange={(tab) => {
           const routes = {
-            home: '/orghome',
-            events: '/orgevents',
-            calendar: '/orgcalendar',
-            chat: '/orgchat',
-            profile: '/orgprofile'
+            home: '/org/home',
+            events: '/org/events',
+            calendar: '/org/calendar',
+            chat: '/org/chat',
+            profile: '/org/profile'
           };
-          navigate(routes[tab as keyof typeof routes] || '/orghome');
+          navigate(routes[tab as keyof typeof routes] || '/org/home');
         }}
         unreadMessages={unreadMessages}
         isOrganizer={true}
