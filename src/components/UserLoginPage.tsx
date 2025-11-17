@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { signIn, signUp, getCurrentSession, getUserProfile } from '../lib/auth';
+import { useAppStore } from '../store/appStore';
 import { useToast } from '../hooks/useToast';
 import type { LoginCredentials, SignUpCredentials } from '../lib/auth';
 
 export const UserLoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { setUser } = useAppStore();
   const { success, error: showError } = useToast();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [formData, setFormData] = useState({
@@ -27,12 +29,34 @@ export const UserLoginPage: React.FC = () => {
       if (session?.user) {
         const profile = await getUserProfile(session.user.id);
         if (profile && !profile.is_organizer) {
+          // Set user in global store before navigating
+          setUser({
+            id: profile.id,
+            username: profile.username,
+            name: profile.name,
+            age: profile.age,
+            isParent: profile.is_parent,
+            numberOfChildren: profile.number_of_children,
+            hobbies: profile.hobbies,
+            profilePicture: profile.profile_picture,
+            coverPhoto: profile.cover_photo,
+            bio: profile.bio,
+            friends: [],
+            bookedEvents: [],
+            attendedEvents: [],
+            bookmarkedEvents: [],
+            lovedEvents: [],
+            following: [],
+            role: 'user',
+            lastLogin: new Date().toISOString(),
+            theme: 'light',
+          });
           navigate('/user/home');
         }
       }
     };
     checkSession();
-  }, [navigate]);
+  }, [navigate, setUser]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -78,6 +102,28 @@ export const UserLoginPage: React.FC = () => {
               showError('Access Denied', 'This account is registered as an organizer. Please use the organizer login.');
               return;
             }
+            // Set user in global store
+            setUser({
+              id: profile.id,
+              username: profile.username,
+              name: profile.name,
+              age: profile.age,
+              isParent: profile.is_parent,
+              numberOfChildren: profile.number_of_children,
+              hobbies: profile.hobbies,
+              profilePicture: profile.profile_picture,
+              coverPhoto: profile.cover_photo,
+              bio: profile.bio,
+              friends: [],
+              bookedEvents: [],
+              attendedEvents: [],
+              bookmarkedEvents: [],
+              lovedEvents: [],
+              following: [],
+              role: 'user',
+              lastLogin: new Date().toISOString(),
+              theme: 'light',
+            });
             success('Welcome back!', 'You have successfully signed in.');
             navigate('/user/home');
           } else {
