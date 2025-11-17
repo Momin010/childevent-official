@@ -34,8 +34,10 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'profiles' AND column_name = 'hobbies' AND data_type != 'jsonb'
   ) THEN
-    -- Convert text[] to jsonb
+    -- Drop the default first, then convert
+    ALTER TABLE profiles ALTER COLUMN hobbies DROP DEFAULT;
     ALTER TABLE profiles ALTER COLUMN hobbies TYPE jsonb USING array_to_json(hobbies);
+    ALTER TABLE profiles ALTER COLUMN hobbies SET DEFAULT '[]'::jsonb;
   ELSIF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_name = 'profiles' AND column_name = 'hobbies'
