@@ -150,43 +150,7 @@ function App() {
             <Route path="/userlogin" element={<UserLoginPage />} />
             <Route path="/useronboarding" element={<UserOnboardingPage />} />
             <Route
-              path="/userhome"
-              element={
-                authLoading ? (
-                  <LoadingScreen />
-                ) : user && user.role === 'user' ? (
-                  <UserApp user={user} onSignOut={handleSignOut} />
-                ) : (
-                  <Navigate to="/userlogin" replace />
-                )
-              }
-            />
-            <Route
-              path="/usercalendar"
-              element={
-                authLoading ? (
-                  <LoadingScreen />
-                ) : user && user.role === 'user' ? (
-                  <UserApp user={user} onSignOut={handleSignOut} />
-                ) : (
-                  <Navigate to="/userlogin" replace />
-                )
-              }
-            />
-            <Route
-              path="/userprofile"
-              element={
-                authLoading ? (
-                  <LoadingScreen />
-                ) : user && user.role === 'user' ? (
-                  <UserApp user={user} onSignOut={handleSignOut} />
-                ) : (
-                  <Navigate to="/userlogin" replace />
-                )
-              }
-            />
-            <Route
-              path="/userchat"
+              path="/user*"
               element={
                 authLoading ? (
                   <LoadingScreen />
@@ -202,47 +166,7 @@ function App() {
             <Route path="/orglogin" element={<OrganizerLoginPage />} />
             <Route path="/orgonboarding" element={<OrganizerOnboardingPage />} />
             <Route
-              path="/orghome"
-              element={<OrganizerApp user={user} onSignOut={handleSignOut} />}
-            />
-            <Route
-              path="/orgcalendar"
-              element={
-                authLoading ? (
-                  <LoadingScreen />
-                ) : user && user.role === 'organizer' ? (
-                  <OrganizerApp user={user} onSignOut={handleSignOut} />
-                ) : (
-                  <Navigate to="/orglogin" replace />
-                )
-              }
-            />
-            <Route
-              path="/orgprofile"
-              element={
-                authLoading ? (
-                  <LoadingScreen />
-                ) : user && user.role === 'organizer' ? (
-                  <OrganizerApp user={user} onSignOut={handleSignOut} />
-                ) : (
-                  <Navigate to="/orglogin" replace />
-                )
-              }
-            />
-            <Route
-              path="/orgevents"
-              element={
-                authLoading ? (
-                  <LoadingScreen />
-                ) : user && user.role === 'organizer' ? (
-                  <OrganizerApp user={user} onSignOut={handleSignOut} />
-                ) : (
-                  <Navigate to="/orglogin" replace />
-                )
-              }
-            />
-            <Route
-              path="/orgchat"
+              path="/org*"
               element={
                 authLoading ? (
                   <LoadingScreen />
