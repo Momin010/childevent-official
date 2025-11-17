@@ -37,14 +37,9 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
   } = useAppStore();
 
   // Determine current page from route
-  const routeToPageMap = {
-    '/user': 'home',
-    '/userhome': 'home',
-    '/usercalendar': 'calendar',
-    '/userchat': 'chat',
-    '/userprofile': 'profile'
-  };
-  const currentPage = routeToPageMap[location.pathname as keyof typeof routeToPageMap] || 'home';
+  const pathParts = location.pathname.split('/');
+  const lastPath = pathParts[pathParts.length - 1] || 'home';
+  const currentPage = ['home', 'calendar', 'chat', 'profile'].includes(lastPath) ? lastPath : 'home';
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -318,12 +313,12 @@ export const UserApp: React.FC<UserAppProps> = ({ user: initialUser, onSignOut }
         activeTab={currentPage}
         onTabChange={(tab) => {
           const routes = {
-            home: '/userhome',
-            calendar: '/usercalendar',
-            chat: '/userchat',
-            profile: '/userprofile'
+            home: '/user/home',
+            calendar: '/user/calendar',
+            chat: '/user/chat',
+            profile: '/user/profile'
           };
-          navigate(routes[tab as keyof typeof routes] || '/userhome');
+          navigate(routes[tab as keyof typeof routes] || '/user/home');
           setSelectedOrganizer(null);
         }}
         unreadMessages={unreadMessages}
