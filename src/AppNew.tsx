@@ -21,7 +21,7 @@ import type { User } from './types';
 
 function App() {
   const { toasts, removeToast } = useToast();
-  const { user, setUser, authLoading, setAuthLoading } = useAppStore();
+  const { user, setUser, authLoading, setAuthLoading, reset } = useAppStore();
   const authCheckRef = useRef(false);
 
   // Loading screen component
@@ -106,7 +106,10 @@ function App() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      setUser(null);
+      // Complete reset of all app state
+      reset();
+      // Reset auth check ref to prevent conflicts
+      authCheckRef.current = false;
     } catch (error) {
       console.error('Sign out error:', error);
     }
