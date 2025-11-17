@@ -37,7 +37,7 @@ function App() {
         authCheckRef.current = false;
       });
     }
-  }, [location.pathname, user]);
+  }, [location.pathname]);
 
   const checkAuthStatus = async () => {
     try {
