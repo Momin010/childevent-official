@@ -12,6 +12,7 @@ import { AdminPasswordPage } from './components/AdminPasswordPage';
 import { AdminPanel } from './components/AdminPanel';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ErrorPage, NotFoundPage, ServerErrorPage, NetworkErrorPage, PermissionDeniedPage } from './components/ErrorPage';
 import { ToastContainer } from './components/Toast';
 import { isSupabaseConfigured } from './lib/supabase';
 import { getCurrentSession, getUserProfile, signOut, onAuthStateChange } from './lib/auth';
@@ -186,6 +187,15 @@ function App() {
             {/* Admin routes */}
             <Route path="/admin" element={<AdminPasswordPage />} />
             <Route path="/adminpanel" element={<AdminPanel />} />
+
+            {/* Error routes */}
+            <Route path="/error" element={<ErrorPage />} />
+            <Route path="/error/network" element={<NetworkErrorPage />} />
+            <Route path="/error/403" element={<PermissionDeniedPage />} />
+            <Route path="/error/500" element={<ServerErrorPage />} />
+
+            {/* 404 catch-all route */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
       </Router>
