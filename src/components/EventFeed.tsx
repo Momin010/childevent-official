@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { EventCard } from './EventCard';
 import { SearchBar } from './SearchBar';
+import { RecommendedEvents } from './RecommendedEvents';
 import { Bookmark, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Event } from '../types';
@@ -45,6 +46,17 @@ export const EventFeed: React.FC<EventFeedProps> = ({
       <SearchBar
         events={events}
         onFilteredEvents={handleFilteredEvents}
+      />
+
+      {/* Recommended Events */}
+      <RecommendedEvents
+        onEventClick={onEventClick}
+        onLike={onLike}
+        onBookmark={onBookmark}
+        onShare={onShare}
+        onOrganizerClick={onOrganizerClick}
+        bookmarkedEvents={bookmarkedEvents}
+        lovedEvents={lovedEvents}
       />
 
       <div className="flex gap-6">

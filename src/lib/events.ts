@@ -358,6 +358,50 @@ export const getOrganizerEvents = async (organizerId: string): Promise<Event[]> 
   }
 };
 
+// Get single event by ID
+export const getEventById = async (eventId: string): Promise<Event | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('events_with_profiles')
+      .select('*')
+      .eq('id', eventId)
+      .single();
+
+    if (error) throw error;
+
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      imageUrl: data.image_url,
+      date: data.date,
+      time: data.time,
+      location: data.location,
+      organizer: {
+        id: data.organizer_id,
+        name: data.organizer_name,
+        profilePicture: data.organizer_profile_picture,
+        followers: 0, // Will be calculated separately
+        events: 0, // Will be calculated separately
+      },
+      interestedCount: data.signups_count || 0,
+      goingCount: data.signups_count || 0, // Using signups as going count
+      likes: data.likes_count || 0,
+      comments: [], // Will be loaded separately if needed
+      attendees: [], // Will be loaded separately if needed
+      isBookmarked: false, // Will be set based on user data
+      isLoved: false, // Will be set based on user data
+      clicks: data.clicks_count || 0,
+      createdAt: data.created_at,
+    };
+  } catch (error) {
+    console.error('Error fetching event by ID:', error);
+    return null;
+  }
+};
+
 // Increment event clicks
 export const incrementEventClicks = async (eventId: string): Promise<void> => {
   try {
