@@ -14,6 +14,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ErrorPage, NotFoundPage, ServerErrorPage, NetworkErrorPage, PermissionDeniedPage } from './components/ErrorPage';
 import { ToastContainer } from './components/Toast';
+import { Analytics } from './components/Analytics';
 import { isSupabaseConfigured } from './lib/supabase';
 import { getCurrentSession, getUserProfile, signOut, onAuthStateChange } from './lib/auth';
 import { useAppStore } from './store/appStore';
@@ -142,6 +143,9 @@ function App() {
     <ErrorBoundary>
       <Router>
         <div className="min-h-screen">
+          {/* Analytics */}
+          <Analytics />
+
           {/* Toast Container */}
           <ToastContainer toasts={toasts} onClose={removeToast} />
 
