@@ -268,7 +268,10 @@ export const UserApp: React.FC<UserAppProps> = ({ onSignOut }) => {
             user={user}
             bookedEvents={events.filter(event => userAttending.includes(event.id))}
             attendedEvents={[]} // Past events would be filtered by date
-            onUpdateProfile={(updates) => {/* Handle profile updates */}}
+            onUpdateProfile={(updates) => {
+              // Update the global user state with the new profile data
+              setUser({ ...user, ...updates });
+            }}
             onSignOut={onSignOut}
           />
         );
