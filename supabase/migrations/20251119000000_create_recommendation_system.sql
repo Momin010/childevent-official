@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS user_event_interactions (
     duration_seconds INTEGER, -- Time spent viewing (for view interactions)
     metadata JSONB, -- Additional data like scroll depth, etc.
 
-    UNIQUE(user_id, event_id, interaction_type, DATE(timestamp))
+    -- UNIQUE constraint handled by index below
 );
 
 -- User search behavior
@@ -75,6 +75,10 @@ CREATE INDEX IF NOT EXISTS idx_event_similarities_score ON event_similarities(si
 
 CREATE INDEX IF NOT EXISTS idx_user_recommendations_user ON user_recommendations(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_recommendations_expires ON user_recommendations(expires_at);
+
+-- Unique constraint for user interactions (one per user-event-type per day)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_user_event_interaction_daily
+ON user_event_interactions(user_id, event_id, interaction_type, DATE(timestamp));
 
 -- RLS Policies
 ALTER TABLE user_event_interactions ENABLE ROW LEVEL SECURITY;
