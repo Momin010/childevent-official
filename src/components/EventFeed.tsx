@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { EventCard } from './EventCard';
+import { SearchBar } from './SearchBar';
 import { Bookmark, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Event } from '../types';
@@ -27,45 +28,76 @@ export const EventFeed: React.FC<EventFeedProps> = ({
   bookmarkedEvents,
   lovedEvents,
 }) => {
+  const [displayedEvents, setDisplayedEvents] = useState(events);
+
+  // Update displayed events when events prop changes
+  useEffect(() => {
+    setDisplayedEvents(events);
+  }, [events]);
+
+  const handleFilteredEvents = (filteredEvents: Event[]) => {
+    setDisplayedEvents(filteredEvents);
+  };
+
   return (
-    <div className="flex max-w-6xl mx-auto px-4 py-4 mb-16 gap-6">
-      {/* Sidebar */}
-      <div className="hidden md:block w-64 space-y-4">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center space-x-3 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200"
-        >
-          <Bookmark className="w-5 h-5 text-blue-500" />
-          <span className="font-medium">Bookmarked Events ({bookmarkedEvents.length})</span>
-        </motion.button>
+    <div className="max-w-6xl mx-auto px-4 py-4 mb-16">
+      {/* Search Bar */}
+      <SearchBar
+        events={events}
+        onFilteredEvents={handleFilteredEvents}
+      />
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center space-x-3 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200"
-        >
-          <Heart className="w-5 h-5 text-red-500" />
-          <span className="font-medium">Loved Events ({lovedEvents.length})</span>
-        </motion.button>
-      </div>
+      <div className="flex gap-6">
+        {/* Sidebar */}
+        <div className="hidden md:block w-64 space-y-4">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full flex items-center space-x-3 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <Bookmark className="w-5 h-5 text-blue-500" />
+            <span className="font-medium">Bookmarked Events ({bookmarkedEvents.length})</span>
+          </motion.button>
 
-      {/* Event Feed */}
-      <div className="flex-1 max-w-lg mx-auto">
-        {events.map((event) => (
-          <EventCard
-            key={event.id}
-            event={event}
-            onClick={() => onEventClick(event)}
-            onLike={onLike}
-            onBookmark={onBookmark}
-            onComment={onComment}
-            onShare={onShare}
-            onOrganizerClick={onOrganizerClick}
-            isBookmarked={bookmarkedEvents.includes(event.id)}
-            isLoved={lovedEvents.includes(event.id)}
-          />
-        ))}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full flex items-center space-x-3 p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200"
+          >
+            <Heart className="w-5 h-5 text-red-500" />
+            <span className="font-medium">Loved Events ({lovedEvents.length})</span>
+          </motion.button>
+        </div>
+
+        {/* Event Feed */}
+        <div className="flex-1 max-w-lg mx-auto">
+          {displayedEvents.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-12 text-gray-500"
+            >
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-semibold mb-2">No events found</h3>
+              <p className="text-gray-400">Try adjusting your search criteria or filters</p>
+            </motion.div>
+          ) : (
+            displayedEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                onClick={() => onEventClick(event)}
+                onLike={onLike}
+                onBookmark={onBookmark}
+                onComment={onComment}
+                onShare={onShare}
+                onOrganizerClick={onOrganizerClick}
+                isBookmarked={bookmarkedEvents.includes(event.id)}
+                isLoved={lovedEvents.includes(event.id)}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
