@@ -13,8 +13,20 @@ export const uploadProfilePicture = async (
   userId: string
 ): Promise<UploadResult> => {
   try {
-    // Create a unique filename
-    const fileExt = file.name.split('.').pop();
+    // Create a unique filename with proper extension
+    const fileNameLower = file.name.toLowerCase();
+    let fileExt = 'jpg'; // default fallback
+
+    // Extract extension more robustly
+    if (fileNameLower.includes('.')) {
+      const parts = fileNameLower.split('.');
+      const ext = parts[parts.length - 1];
+      // Validate it's a reasonable image extension
+      if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'].includes(ext)) {
+        fileExt = ext === 'jpeg' ? 'jpg' : ext; // normalize jpeg to jpg
+      }
+    }
+
     const fileName = `${userId}/profile-${Date.now()}.${fileExt}`;
     const filePath = `profiles/${fileName}`;
 
@@ -54,8 +66,20 @@ export const uploadCoverPhoto = async (
   userId: string
 ): Promise<UploadResult> => {
   try {
-    // Create a unique filename
-    const fileExt = file.name.split('.').pop();
+    // Create a unique filename with proper extension
+    const fileNameLower = file.name.toLowerCase();
+    let fileExt = 'jpg'; // default fallback
+
+    // Extract extension more robustly
+    if (fileNameLower.includes('.')) {
+      const parts = fileNameLower.split('.');
+      const ext = parts[parts.length - 1];
+      // Validate it's a reasonable image extension
+      if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'].includes(ext)) {
+        fileExt = ext === 'jpeg' ? 'jpg' : ext; // normalize jpeg to jpg
+      }
+    }
+
     const fileName = `${userId}/cover-${Date.now()}.${fileExt}`;
     const filePath = `covers/${fileName}`;
 
@@ -110,12 +134,25 @@ export const deleteImage = async (path: string): Promise<void> => {
  * Validate image file
  */
 export const validateImageFile = (file: File): { valid: boolean; error?: string } => {
-  // Check file type
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  if (!allowedTypes.includes(file.type)) {
+  // Check file type - be more comprehensive with MIME types
+  const allowedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'image/bmp'
+  ];
+
+  // Also check file extension as fallback
+  const fileName = file.name.toLowerCase();
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'];
+  const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+  if (!allowedTypes.includes(file.type) && !hasValidExtension) {
     return {
       valid: false,
-      error: 'Please select a valid image file (JPEG, PNG, or WebP)'
+      error: 'Please select a valid image file (JPEG, PNG, WebP, GIF, or BMP)'
     };
   }
 
