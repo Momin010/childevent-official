@@ -76,9 +76,12 @@ CREATE INDEX IF NOT EXISTS idx_event_similarities_score ON event_similarities(si
 CREATE INDEX IF NOT EXISTS idx_user_recommendations_user ON user_recommendations(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_recommendations_expires ON user_recommendations(expires_at);
 
+-- Create a generated column for the date
+ALTER TABLE user_event_interactions ADD COLUMN IF NOT EXISTS interaction_date DATE GENERATED ALWAYS AS (DATE(timestamp)) STORED;
+
 -- Unique constraint for user interactions (one per user-event-type per day)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_user_event_interaction_daily
-ON user_event_interactions(user_id, event_id, interaction_type, DATE(timestamp));
+ON user_event_interactions(user_id, event_id, interaction_type, interaction_date);
 
 -- RLS Policies
 ALTER TABLE user_event_interactions ENABLE ROW LEVEL SECURITY;
