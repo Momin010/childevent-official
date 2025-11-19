@@ -220,9 +220,9 @@ BEGIN
         FROM profiles WHERE id = p_user_id
     ),
     user_interactions AS (
-        SELECT DISTINCT event_id
-        FROM user_event_interactions
-        WHERE user_id = p_user_id
+        SELECT DISTINCT uei.event_id
+        FROM user_event_interactions uei
+        WHERE uei.user_id = p_user_id
     ),
     candidate_events AS (
         SELECT

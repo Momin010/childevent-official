@@ -224,36 +224,10 @@ export const getCollaborativeRecommendations = async (
   limit: number = 10
 ): Promise<Recommendation[]> => {
   try {
-    // Find users with similar interaction patterns
-    const { data: similarUsers, error: similarError } = await supabase
-      .rpc('find_similar_users', {
-        p_user_id: userId,
-        p_limit: 20
-      });
-
-    if (similarError || !similarUsers || similarUsers.length === 0) {
-      return [];
-    }
-
-    // Get events that similar users interacted with but current user hasn't
-    const similarUserIds = similarUsers.map((u: any) => u.user_id);
-
-    const { data: interactions, error: interactionError } = await supabase
-      .from('user_event_interactions')
-      .select('event_id, COUNT(*) as interaction_count')
-      .in('user_id', similarUserIds)
-      .not('event_id', 'in', `(${await getUserInteractedEvents(userId)})`)
-      .group('event_id')
-      .order('interaction_count', { ascending: false })
-      .limit(limit);
-
-    if (interactionError) throw interactionError;
-
-    return interactions?.map(item => ({
-      eventId: item.event_id,
-      score: Math.min(item.interaction_count / similarUsers.length, 1),
-      reason: 'liked_by_similar_users'
-    })) || [];
+    // For now, return empty array - collaborative filtering needs more complex implementation
+    // This would require finding similar users based on interaction patterns
+    // and then recommending events they liked that the current user hasn't seen
+    return [];
   } catch (error) {
     console.error('Failed to get collaborative recommendations:', error);
     return [];
