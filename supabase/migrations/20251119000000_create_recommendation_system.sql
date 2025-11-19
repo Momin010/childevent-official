@@ -209,7 +209,7 @@ CREATE OR REPLACE FUNCTION get_user_recommendations(
     p_user_id UUID,
     p_limit INTEGER DEFAULT 10
 ) RETURNS TABLE (
-    event_id UUID,
+    recommended_event_id UUID,
     score DECIMAL(5,4),
     reason TEXT
 ) AS $$
@@ -220,35 +220,38 @@ BEGIN
         FROM profiles WHERE id = p_user_id
     ),
     user_interactions AS (
-        SELECT DISTINCT uei.event_id
+        SELECT DISTINCT uei.event_id AS interacted_event_id
         FROM user_event_interactions uei
         WHERE uei.user_id = p_user_id
     ),
     candidate_events AS (
         SELECT
-            e.id,
+            e.id AS candidate_event_id,
             e.category,
             e.location,
             e.age_min,
             e.age_max,
             e.family_friendly,
-            calculate_user_event_affinity(p_user_id, e.id) as affinity_score
+            calculate_user_event_affinity(p_user_id, e.id) AS affinity_score
         FROM events e
-        WHERE e.id NOT IN (SELECT ui.event_id FROM user_interactions ui)
+        WHERE e.id NOT IN (SELECT ui.interacted_event_id FROM user_interactions ui)
         AND e.status = 'active'
         AND e.event_date > NOW()
     ),
     scored_events AS (
         SELECT
-            ce.id as event_id,
-            ce.affinity_score as score,
+            ce.candidate_event_id AS recommended_event_id,
+            ce.affinity_score AS score,
             CASE
                 WHEN ce.affinity_score > 0.5 THEN 'high_affinity_based_on_behavior'
-                WHEN ce.category = ANY((SELECT hobbies FROM user_profile)) THEN 'matches_your_hobbies'
+                WHEN ce.category = ANY (
+                    SELECT ARRAY_AGG(value::text)
+                    FROM jsonb_array_elements_text((SELECT hobbies FROM user_profile))
+                ) THEN 'matches_your_hobbies'
                 WHEN ce.family_friendly AND (SELECT is_parent FROM user_profile) THEN 'family_friendly'
                 WHEN ce.age_min <= (SELECT age FROM user_profile) AND ce.age_max >= (SELECT age FROM user_profile) THEN 'age_appropriate'
                 ELSE 'trending_near_you'
-            END as reason
+            END AS reason
         FROM candidate_events ce
         ORDER BY ce.affinity_score DESC
         LIMIT p_limit

@@ -178,7 +178,7 @@ export const getPersonalizedRecommendations = async (
     if (data && data.length > 0) {
       const cacheData = data.map(rec => ({
         user_id: userId,
-        recommended_event_id: rec.event_id,
+        recommended_event_id: rec.recommended_event_id,
         recommendation_score: rec.score,
         recommendation_reason: rec.reason
       }));
