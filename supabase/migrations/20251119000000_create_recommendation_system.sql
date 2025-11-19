@@ -234,7 +234,7 @@ BEGIN
             e.family_friendly,
             calculate_user_event_affinity(p_user_id, e.id) as affinity_score
         FROM events e
-        WHERE e.id NOT IN (SELECT event_id FROM user_interactions)
+        WHERE e.id NOT IN (SELECT ui.event_id FROM user_interactions ui)
         AND e.status = 'active'
         AND e.event_date > NOW()
     ),
