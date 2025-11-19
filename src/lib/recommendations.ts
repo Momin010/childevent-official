@@ -190,7 +190,11 @@ export const getPersonalizedRecommendations = async (
         });
     }
 
-    return data || [];
+    return data?.map(rec => ({
+      eventId: rec.recommended_event_id,
+      score: rec.score,
+      reason: rec.reason
+    })) || [];
   } catch (error) {
     console.error('Failed to get recommendations:', error);
     return [];
