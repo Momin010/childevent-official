@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS user_event_interactions (
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
     interaction_type TEXT NOT NULL CHECK (interaction_type IN ('view', 'click', 'bookmark', 'like', 'signup', 'attend')),
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    interaction_timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     duration_seconds INTEGER, -- Time spent viewing (for view interactions)
     metadata JSONB, -- Additional data like scroll depth, etc.
 
@@ -77,7 +77,7 @@ CREATE INDEX IF NOT EXISTS idx_user_recommendations_user ON user_recommendations
 CREATE INDEX IF NOT EXISTS idx_user_recommendations_expires ON user_recommendations(expires_at);
 
 -- Create a generated column for the date
-ALTER TABLE user_event_interactions ADD COLUMN IF NOT EXISTS interaction_date DATE GENERATED ALWAYS AS (DATE(timestamp)) STORED;
+ALTER TABLE user_event_interactions ADD COLUMN IF NOT EXISTS interaction_date DATE GENERATED ALWAYS AS (interaction_timestamp::date) STORED;
 
 -- Unique constraint for user interactions (one per user-event-type per day)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_user_event_interaction_daily
