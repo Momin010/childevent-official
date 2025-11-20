@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, Users, Calendar, BarChart3, Settings, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AdminEventHub } from './AdminEventHub';
+import { AdminOrganizerManager } from './AdminOrganizerManager';
 
 export const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
@@ -91,23 +92,14 @@ export const AdminPanel: React.FC = () => {
 
         {/* Placeholder Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* User Management */}
+          {/* Organizer Manager */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
             className="bg-white rounded-lg shadow-sm p-6"
           >
-            <div className="flex items-center mb-4">
-              <Users className="w-5 h-5 text-blue-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
-            </div>
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
-            </div>
-            <p className="text-sm text-gray-500 mt-4">Coming Soon: User accounts, roles, and permissions management</p>
+            <AdminOrganizerManager />
           </motion.div>
 
           {/* Event Hub */}
