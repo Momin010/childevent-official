@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Users, Calendar, BarChart3, Settings, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AdminEventHub } from './AdminEventHub';
 
 export const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
@@ -109,23 +110,14 @@ export const AdminPanel: React.FC = () => {
             <p className="text-sm text-gray-500 mt-4">Coming Soon: User accounts, roles, and permissions management</p>
           </motion.div>
 
-          {/* Event Moderation */}
+          {/* Event Hub */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
             className="bg-white rounded-lg shadow-sm p-6"
           >
-            <div className="flex items-center mb-4">
-              <Calendar className="w-5 h-5 text-green-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-900">Event Moderation</h3>
-            </div>
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-4/5"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3"></div>
-            </div>
-            <p className="text-sm text-gray-500 mt-4">Coming Soon: Event approval, content moderation, and reporting</p>
+            <AdminEventHub />
           </motion.div>
 
           {/* Analytics */}
