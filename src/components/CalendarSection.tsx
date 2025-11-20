@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import Calendar from 'react-calendar';
 import { motion } from 'framer-motion';
 import { format, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
@@ -16,93 +16,34 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
   onEventClick,
   userRole = 'user',
 }) => {
-  const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>(null);
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [selectionStart, setSelectionStart] = useState<Date | null>(null);
-  const calendarRef = useRef<HTMLDivElement>(null);
-  const longPressTimer = useRef<number | null>(null);
-  const isLongPress = useRef(false);
+  const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | Date | null>(null);
+  const [viewMode, setViewMode] = useState<'single' | 'range'>('single');
 
-  const getEventsForDateRange = (dateRange: [Date, Date] | null) => {
+  const getEventsForDateRange = (dateRange: [Date, Date] | Date | null) => {
     if (!dateRange) return [];
-    return events.filter((event) => {
-      const eventDate = startOfDay(new Date(event.date));
-      return isWithinInterval(eventDate, {
-        start: startOfDay(dateRange[0]),
-        end: endOfDay(dateRange[1])
+
+    if (Array.isArray(dateRange)) {
+      // Date range
+      return events.filter((event) => {
+        const eventDate = startOfDay(new Date(event.date));
+        return isWithinInterval(eventDate, {
+          start: startOfDay(dateRange[0]),
+          end: endOfDay(dateRange[1])
+        });
       });
-    });
+    } else {
+      // Single date
+      return events.filter(
+        (event) => format(new Date(event.date), 'yyyy-MM-dd') === format(dateRange, 'yyyy-MM-dd')
+      );
+    }
   };
 
-  const getEventsForDate = (date: Date) => {
-    return events.filter(
-      (event) => format(new Date(event.date), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
-    );
+  const selectedEvents = getEventsForDateRange(selectedDateRange);
+
+  const handleCalendarChange = (value: Date | [Date, Date] | null) => {
+    setSelectedDateRange(value);
   };
-
-  const selectedEvents = selectedDateRange
-    ? getEventsForDateRange(selectedDateRange)
-    : [];
-
-  // Touch/mouse gesture handlers
-  const handleMouseDown = useCallback((date: Date) => {
-    longPressTimer.current = window.setTimeout(() => {
-      isLongPress.current = true;
-      setIsSelecting(true);
-      setSelectionStart(date);
-      setSelectedDateRange([date, date]);
-    }, 500); // 500ms for long press
-  }, []);
-
-  const handleMouseUp = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    if (!isLongPress.current) {
-      // Regular click - select single date
-      setSelectedDateRange(null);
-      setIsSelecting(false);
-    }
-    isLongPress.current = false;
-  }, []);
-
-  const handleMouseEnter = useCallback((date: Date) => {
-    if (isSelecting && selectionStart) {
-      const start = selectionStart < date ? selectionStart : date;
-      const end = selectionStart < date ? date : selectionStart;
-      setSelectedDateRange([start, end]);
-    }
-  }, [isSelecting, selectionStart]);
-
-  const handleTouchStart = useCallback((date: Date) => {
-    longPressTimer.current = window.setTimeout(() => {
-      isLongPress.current = true;
-      setIsSelecting(true);
-      setSelectionStart(date);
-      setSelectedDateRange([date, date]);
-    }, 500);
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-    if (!isLongPress.current) {
-      setSelectedDateRange(null);
-      setIsSelecting(false);
-    }
-    isLongPress.current = false;
-  }, []);
-
-  const handleTouchMove = useCallback((date: Date) => {
-    if (isSelecting && selectionStart) {
-      const start = selectionStart < date ? selectionStart : date;
-      const end = selectionStart < date ? date : selectionStart;
-      setSelectedDateRange([start, end]);
-    }
-  }, [isSelecting, selectionStart]);
 
   const tileClassName = ({ date }: { date: Date }) => {
     let classes = '';
@@ -114,12 +55,17 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
     if (hasEvents) classes += 'has-events ';
 
     // Check if date is in selected range
-    if (selectedDateRange) {
+    if (selectedDateRange && Array.isArray(selectedDateRange)) {
       const dateStart = startOfDay(date);
       const rangeStart = startOfDay(selectedDateRange[0]);
       const rangeEnd = endOfDay(selectedDateRange[1]);
 
       if (isWithinInterval(dateStart, { start: rangeStart, end: rangeEnd })) {
+        classes += 'selected-range ';
+      }
+    } else if (selectedDateRange && !Array.isArray(selectedDateRange)) {
+      // Single date selection
+      if (format(date, 'yyyy-MM-dd') === format(selectedDateRange, 'yyyy-MM-dd')) {
         classes += 'selected-range ';
       }
     }
@@ -129,8 +75,11 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
 
   const clearSelection = () => {
     setSelectedDateRange(null);
-    setIsSelecting(false);
-    setSelectionStart(null);
+  };
+
+  const toggleViewMode = () => {
+    setViewMode(viewMode === 'single' ? 'range' : 'single');
+    setSelectedDateRange(null);
   };
 
   return (
@@ -153,31 +102,39 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
               )}
             </div>
 
-            <div className="mb-4 text-sm text-gray-600">
-              {selectedDateRange ? (
-                <div className="flex items-center">
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  <span>
-                    Selected: {format(selectedDateRange[0], 'MMM d')} - {format(selectedDateRange[1], 'MMM d, yyyy')}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  <span>Long press and drag to select date range</span>
-                </div>
-              )}
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                {selectedDateRange ? (
+                  <div className="flex items-center">
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    <span>
+                      {Array.isArray(selectedDateRange)
+                        ? `Selected: ${format(selectedDateRange[0], 'MMM d')} - ${format(selectedDateRange[1], 'MMM d, yyyy')}`
+                        : `Selected: ${format(selectedDateRange, 'MMMM d, yyyy')}`
+                      }
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    <span>Click dates to select range</span>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={toggleViewMode}
+                className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+              >
+                {viewMode === 'single' ? 'Range Mode' : 'Single Mode'}
+              </button>
             </div>
 
             <Calendar
+              onChange={handleCalendarChange}
+              value={selectedDateRange}
+              selectRange={viewMode === 'range'}
               tileClassName={tileClassName}
               className="w-full"
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-              onMouseEnter={handleMouseEnter}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              onTouchMove={handleTouchMove}
             />
           </div>
 
