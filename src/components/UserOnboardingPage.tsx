@@ -85,8 +85,9 @@ export const UserOnboardingPage: React.FC = () => {
           return;
         }
 
+        const username = await import('../lib/auth').then(m => m.generateUniqueUsername(userData.name));
         const profileData = {
-          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || '',
+          username,
           name: userData.name,
           age,
           is_parent: userData.isParent,

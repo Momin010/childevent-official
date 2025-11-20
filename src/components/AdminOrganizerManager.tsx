@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase';
 
 interface OrganizerFormData {
   email: string;
-  username: string;
   organizationName: string;
   industry: string;
   website: string;
@@ -21,7 +20,6 @@ export const AdminOrganizerManager: React.FC = () => {
   const [creationResult, setCreationResult] = useState<{ success: boolean; message: string; organizerId?: string } | null>(null);
   const [formData, setFormData] = useState<OrganizerFormData>({
     email: '',
-    username: '',
     organizationName: '',
     industry: '',
     website: '',
@@ -62,13 +60,9 @@ export const AdminOrganizerManager: React.FC = () => {
 
     if (!formData.email.trim()) errors.push('Email is required');
     if (!formData.email.includes('@')) errors.push('Valid email is required');
-    if (!formData.username.trim()) errors.push('Username is required');
     if (!formData.organizationName.trim()) errors.push('Organization name is required');
     if (!formData.name.trim()) errors.push('Contact person name is required');
     if (!formData.industry) errors.push('Industry is required');
-
-    // Check if username or email already exists
-    // We'll handle this in the async function
 
     return errors;
   };
@@ -89,31 +83,33 @@ export const AdminOrganizerManager: React.FC = () => {
     setCreationResult(null);
 
     try {
-      // Check if username or email already exists
+      // Check if email already exists
       const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .select('id, username, email')
-        .or(`username.eq.${formData.username},email.eq.${formData.email}`)
+        .select('id, email')
+        .eq('email', formData.email)
         .maybeSingle();
 
       if (checkError) throw checkError;
 
       if (existingProfile) {
-        const conflictField = existingProfile.username === formData.username ? 'username' : 'email';
         setCreationResult({
           success: false,
-          message: `A profile with this ${conflictField} already exists`
+          message: `A profile with this email already exists`
         });
         setIsCreating(false);
         return;
       }
+
+      // Generate unique username
+      const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
 
       // Create the organizer profile
       const { data, error } = await supabase
         .from('profiles')
         .insert({
           email: formData.email,
-          username: formData.username,
+          username,
           name: formData.name,
           role: 'organizer',
           organization_name: formData.organizationName,
@@ -123,7 +119,6 @@ export const AdminOrganizerManager: React.FC = () => {
           bio: formData.bio || null,
           phone: formData.phone || null,
           location: formData.location || null,
-          organizer_verified: false, // Admin can verify later
           total_events_created: 0,
           total_attendees_served: 0,
         })
@@ -141,7 +136,6 @@ export const AdminOrganizerManager: React.FC = () => {
       // Reset form
       setFormData({
         email: '',
-        username: '',
         organizationName: '',
         industry: '',
         website: '',
@@ -231,20 +225,6 @@ export const AdminOrganizerManager: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Username *
-              </label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="company_org"
-                required
-              />
-            </div>
           </div>
 
           {/* Organization Details */}

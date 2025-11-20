@@ -9,7 +9,6 @@ export const loginSchema = z.object({
 });
 
 export const signUpSchema = loginSchema.extend({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
@@ -119,7 +118,7 @@ export const signInWithGoogle = async () => {
 };
 
 // Sign up
-export const signUp = async ({ email, password, username }: SignUpCredentials) => {
+export const signUp = async ({ email, password }: SignUpCredentials) => {
   try {
     if (!supabase) {
       throw new Error(AUTH_ERRORS.NOT_CONFIGURED);
@@ -128,11 +127,6 @@ export const signUp = async ({ email, password, username }: SignUpCredentials) =
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: {
-          username,
-        },
-      },
     });
 
     if (error) {
@@ -430,6 +424,42 @@ export const updateUserProfile = async (userId: string, updates: any) => {
 
     if (error) throw error;
     return data;
+  } catch (error) {
+    throw new Error(handleAuthError(error));
+  }
+};
+
+// Generate unique username
+export const generateUniqueUsername = async (baseName: string): Promise<string> => {
+  try {
+    if (!supabase) {
+      throw new Error(AUTH_ERRORS.NOT_CONFIGURED);
+    }
+
+    // Clean the base name: remove spaces, special chars, lowercase
+    const cleanBase = baseName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    let username = cleanBase;
+    let counter = 1;
+
+    // Check if username exists, if so, append number
+    while (true) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
+
+      if (error && error.code === 'PGRST116') { // No rows returned
+        return username;
+      }
+
+      if (data) {
+        username = `${cleanBase}${counter}`;
+        counter++;
+      } else {
+        return username;
+      }
+    }
   } catch (error) {
     throw new Error(handleAuthError(error));
   }

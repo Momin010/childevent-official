@@ -20,7 +20,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    username: '',
     rememberMe: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -129,29 +128,6 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             onSubmit={handleSubmit}
             className="space-y-4"
           >
-            {(mode === 'signup' || mode === 'organizer-signup') && (
-              <div>
-                <label
-                  htmlFor="username"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Username
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                    errors.username ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                />
-                {errors.username && (
-                  <p className="mt-1 text-sm text-red-500">{errors.username}</p>
-                )}
-              </div>
-            )}
 
             <div>
               <label
