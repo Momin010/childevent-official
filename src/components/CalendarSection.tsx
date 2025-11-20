@@ -16,14 +16,13 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
   onEventClick,
   userRole = 'user',
 }) => {
-  const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | Date | null>(null);
+  const [selectedDateRange, setSelectedDateRange] = useState<[Date, Date] | null>(null);
   const [viewMode, setViewMode] = useState<'single' | 'range'>('single');
 
-  const getEventsForDateRange = (dateRange: [Date, Date] | Date | null) => {
+  const getEventsForDateRange = (dateRange: [Date, Date] | null) => {
     if (!dateRange) return [];
 
-    if (Array.isArray(dateRange)) {
-      // Date range
+    try {
       return events.filter((event) => {
         const eventDate = startOfDay(new Date(event.date));
         return isWithinInterval(eventDate, {
@@ -31,18 +30,24 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
           end: endOfDay(dateRange[1])
         });
       });
-    } else {
-      // Single date
-      return events.filter(
-        (event) => format(new Date(event.date), 'yyyy-MM-dd') === format(dateRange, 'yyyy-MM-dd')
-      );
+    } catch (error) {
+      console.error('Error filtering events by date range:', error);
+      return [];
     }
   };
 
   const selectedEvents = getEventsForDateRange(selectedDateRange);
 
   const handleCalendarChange = (value: Date | [Date, Date] | null) => {
-    setSelectedDateRange(value);
+    if (value === null) {
+      setSelectedDateRange(null);
+    } else if (Array.isArray(value)) {
+      // Already a date range
+      setSelectedDateRange(value);
+    } else {
+      // Single date - convert to range [date, date]
+      setSelectedDateRange([value, value]);
+    }
   };
 
   const tileClassName = ({ date }: { date: Date }) => {
@@ -55,17 +60,12 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
     if (hasEvents) classes += 'has-events ';
 
     // Check if date is in selected range
-    if (selectedDateRange && Array.isArray(selectedDateRange)) {
+    if (selectedDateRange) {
       const dateStart = startOfDay(date);
       const rangeStart = startOfDay(selectedDateRange[0]);
       const rangeEnd = endOfDay(selectedDateRange[1]);
 
       if (isWithinInterval(dateStart, { start: rangeStart, end: rangeEnd })) {
-        classes += 'selected-range ';
-      }
-    } else if (selectedDateRange && !Array.isArray(selectedDateRange)) {
-      // Single date selection
-      if (format(date, 'yyyy-MM-dd') === format(selectedDateRange, 'yyyy-MM-dd')) {
         classes += 'selected-range ';
       }
     }
