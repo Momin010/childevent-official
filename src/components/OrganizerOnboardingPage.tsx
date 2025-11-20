@@ -56,19 +56,22 @@ export const OrganizerOnboardingPage: React.FC = () => {
           return;
         }
 
-        const username = await import('../lib/auth').then(m => m.generateUniqueUsername(userData.organizationName));
-        const profileData = {
-          username,
-          name: userData.organizationName,
-          email: session.user.email || '',
-          organization_name: userData.organizationName,
-          industry: userData.industry,
-          website: userData.website || '',
-          role: userData.role,
-          is_organizer: true,
-        };
+        // Use the RPC function to create organizer profile
+        const { data: result, error } = await import('../lib/supabase').then(m =>
+          m.supabase.rpc('create_organizer', {
+            p_name: userData.organizationName,
+            p_email: session.user.email || '',
+            p_organization_name: userData.organizationName,
+            p_industry: userData.industry,
+            p_website: userData.website || null,
+            p_role_in_organization: userData.role,
+          })
+        );
 
-        await createUserProfile(session.user.id, profileData);
+        if (error) throw error;
+        if (!result?.success) {
+          throw new Error(result?.error || 'Failed to create organizer profile');
+        }
         success('Welcome to EventConnect!', 'Your organizer profile has been created successfully.');
 
         // Navigate to organizer home - the app will handle loading the updated user state

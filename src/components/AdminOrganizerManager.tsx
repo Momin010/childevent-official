@@ -104,33 +104,31 @@ export const AdminOrganizerManager: React.FC = () => {
       // Generate unique username
       const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
 
-      // Create the organizer profile
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert({
-          email: formData.email,
-          username,
-          name: formData.name,
-          role: 'organizer',
-          organization_name: formData.organizationName,
-          industry: formData.industry,
-          website: formData.website || null,
-          role_in_organization: formData.roleInOrganization || null,
-          bio: formData.bio || null,
-          phone: formData.phone || null,
-          location: formData.location || null,
-          total_events_created: 0,
-          total_attendees_served: 0,
-        })
-        .select()
-        .single();
+      // Use the admin RPC function to create organizer profile
+      const { data: result, error } = await supabase
+        .rpc('admin_create_organizer', {
+          p_name: formData.name,
+          p_email: formData.email,
+          p_organization_name: formData.organizationName,
+          p_industry: formData.industry,
+          p_website: formData.website || null,
+          p_role_in_organization: formData.roleInOrganization || null,
+          p_bio: formData.bio || null,
+          p_phone: formData.phone || null,
+          p_location: formData.location || null,
+        });
+
+      if (error) throw error;
+      if (!result?.success) {
+        throw new Error(result?.error || 'Failed to create organizer profile');
+      }
 
       if (error) throw error;
 
       setCreationResult({
         success: true,
         message: `Organizer "${formData.organizationName}" created successfully!`,
-        organizerId: data.id
+        organizerId: result.user_id
       });
 
       // Reset form
