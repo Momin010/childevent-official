@@ -111,6 +111,17 @@ body {
   background: #60a5fa;
 }
 
+.react-calendar__tile.selected-range {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  font-weight: bold;
+}
+
+.react-calendar__tile.selected-range:enabled:hover,
+.react-calendar__tile.selected-range:enabled:focus {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+}
+
 /* Smooth transitions */
 .fade-enter {
   opacity: 0;
