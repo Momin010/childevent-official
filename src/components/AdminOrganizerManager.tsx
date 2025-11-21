@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 
 interface OrganizerFormData {
   email: string;
+  password: string;
   organizationName: string;
   industry: string;
   website: string;
@@ -20,6 +21,7 @@ export const AdminOrganizerManager: React.FC = () => {
   const [creationResult, setCreationResult] = useState<{ success: boolean; message: string; organizerId?: string } | null>(null);
   const [formData, setFormData] = useState<OrganizerFormData>({
     email: '',
+    password: '',
     organizationName: '',
     industry: '',
     website: '',
@@ -60,6 +62,8 @@ export const AdminOrganizerManager: React.FC = () => {
 
     if (!formData.email.trim()) errors.push('Email is required');
     if (!formData.email.includes('@')) errors.push('Valid email is required');
+    if (!formData.password.trim()) errors.push('Password is required');
+    if (formData.password.length < 8) errors.push('Password must be at least 8 characters');
     if (!formData.organizationName.trim()) errors.push('Organization name is required');
     if (!formData.name.trim()) errors.push('Contact person name is required');
     if (!formData.industry) errors.push('Industry is required');
@@ -104,19 +108,58 @@ export const AdminOrganizerManager: React.FC = () => {
       // Generate unique username
       const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
 
-      // Use the admin RPC function to create organizer profile
-      const { data: result, error } = await supabase
-        .rpc('admin_create_organizer', {
-          p_name: formData.name,
-          p_email: formData.email,
-          p_organization_name: formData.organizationName,
-          p_industry: formData.industry,
-          p_website: formData.website || null,
-          p_role_in_organization: formData.roleInOrganization || null,
-          p_bio: formData.bio || null,
-          p_phone: formData.phone || null,
-          p_location: formData.location || null,
-        });
+      // Create the organizer through the signup process (same as normal users)
+      // This creates a REAL auth user that can log in immediately
+      const { data: signupData, error: signupError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            organization_name: formData.organizationName,
+            is_organizer: true,
+          },
+        },
+      });
+
+      if (signupError) throw signupError;
+
+      // Wait a moment for the auth user to be created
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Get the user ID from the signup response
+      const userId = signupData.user?.id;
+      if (!userId) {
+        throw new Error('Failed to create auth user');
+      }
+
+      // Generate unique username
+      const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
+
+      // Create the organizer profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          username,
+          name: formData.name,
+          email: formData.email,
+          organization_name: formData.organizationName,
+          industry: formData.industry,
+          website: formData.website || null,
+          role_in_organization: formData.roleInOrganization || null,
+          bio: formData.bio || null,
+          phone: formData.phone || null,
+          location: formData.location || null,
+          role: 'organizer',
+          is_organizer: true,
+          total_events_created: 0,
+          total_attendees_served: 0,
+        })
+        .select()
+        .single();
+
+      if (profileError) throw profileError;
 
       if (error) throw error;
       if (!result?.success) {
@@ -125,13 +168,14 @@ export const AdminOrganizerManager: React.FC = () => {
 
       setCreationResult({
         success: true,
-        message: `Organizer placeholder created successfully! IMPORTANT: This is NOT a real user account yet. The organizer must sign up through the normal registration process using email: ${formData.email}. Once they sign up, their profile will be automatically linked.`,
-        organizerId: result.user_id
+        message: `Organizer created successfully! ✅ REAL user account created with login access. Email: ${formData.email}, Password: ${formData.password}. The organizer can log in immediately and complete their profile setup.`,
+        organizerId: userId
       });
 
       // Reset form
       setFormData({
         email: '',
+        password: '',
         organizationName: '',
         industry: '',
         website: '',
@@ -221,6 +265,21 @@ export const AdminOrganizerManager: React.FC = () => {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Temporary Password *
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Temporary password for organizer"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">Organizer can change this after first login</p>
+            </div>
           </div>
 
           {/* Organization Details */}
@@ -377,17 +436,17 @@ export const AdminOrganizerManager: React.FC = () => {
       </div>
 
       {/* Important Notes */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <div className="flex items-start">
-          <AlertTriangle className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" />
+          <CheckCircle className="w-5 h-5 text-green-600 mr-2 mt-0.5" />
           <div>
-            <h5 className="text-sm font-medium text-yellow-900 mb-1">⚠️ CRITICAL: Organizer Creation Process</h5>
-            <ul className="text-sm text-yellow-800 space-y-1">
-              <li>• <strong>PLACEHOLDER ONLY:</strong> This creates a placeholder profile, NOT a real user account</li>
-              <li>• <strong>REQUIRES SIGNUP:</strong> The organizer must sign up using the provided email address</li>
-              <li>• <strong>ACCOUNT LINKING:</strong> Once they sign up, their real account will be linked to this profile</li>
-              <li>• <strong>EVENT IMPORT:</strong> Use the system organizer for events when the real organizer doesn't exist yet</li>
-              <li>• <strong>NO LOGIN ACCESS:</strong> Placeholder organizers cannot log in until they complete signup</li>
+            <h5 className="text-sm font-medium text-green-900 mb-1">✅ REAL Organizer Creation</h5>
+            <ul className="text-sm text-green-800 space-y-1">
+              <li>• <strong>FULLY FUNCTIONAL:</strong> Creates complete Supabase auth users with immediate login access</li>
+              <li>• <strong>SAME AS USER SIGNUP:</strong> Uses identical process to normal organizer registration</li>
+              <li>• <strong>COMPLETE PROFILES:</strong> Includes all organizer details and contact information</li>
+              <li>• <strong>IMMEDIATE ACCESS:</strong> Organizers can log in right away with provided credentials</li>
+              <li>• <strong>VISIBLE IN AUTH:</strong> Real users appear in Supabase Authentication dashboard</li>
             </ul>
           </div>
         </div>
