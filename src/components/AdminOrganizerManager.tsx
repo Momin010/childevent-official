@@ -123,11 +123,9 @@ export const AdminOrganizerManager: React.FC = () => {
         throw new Error(result?.error || 'Failed to create organizer profile');
       }
 
-      if (error) throw error;
-
       setCreationResult({
         success: true,
-        message: `Organizer "${formData.organizationName}" created successfully!`,
+        message: `Organizer placeholder created successfully! IMPORTANT: This is NOT a real user account yet. The organizer must sign up through the normal registration process using email: ${formData.email}. Once they sign up, their profile will be automatically linked.`,
         organizerId: result.user_id
       });
 
@@ -379,16 +377,17 @@ export const AdminOrganizerManager: React.FC = () => {
       </div>
 
       {/* Important Notes */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex items-start">
-          <AlertTriangle className="w-5 h-5 text-blue-600 mr-2 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" />
           <div>
-            <h5 className="text-sm font-medium text-blue-900 mb-1">Important Notes</h5>
-            <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Created organizers will not have login access initially</li>
-              <li>• They can be verified later through the admin panel</li>
-              <li>• Username and email must be unique across all users</li>
-              <li>• Organizers can create events once their accounts are set up</li>
+            <h5 className="text-sm font-medium text-yellow-900 mb-1">⚠️ CRITICAL: Organizer Creation Process</h5>
+            <ul className="text-sm text-yellow-800 space-y-1">
+              <li>• <strong>PLACEHOLDER ONLY:</strong> This creates a placeholder profile, NOT a real user account</li>
+              <li>• <strong>REQUIRES SIGNUP:</strong> The organizer must sign up using the provided email address</li>
+              <li>• <strong>ACCOUNT LINKING:</strong> Once they sign up, their real account will be linked to this profile</li>
+              <li>• <strong>EVENT IMPORT:</strong> Use the system organizer for events when the real organizer doesn't exist yet</li>
+              <li>• <strong>NO LOGIN ACCESS:</strong> Placeholder organizers cannot log in until they complete signup</li>
             </ul>
           </div>
         </div>

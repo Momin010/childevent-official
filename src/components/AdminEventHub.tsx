@@ -134,10 +134,10 @@ export const AdminEventHub: React.FC = () => {
     for (const event of validEvents) {
       try {
         // For admin-created events, use the organizer ID from JSON if it exists,
-        // otherwise use the admin's own ID as organizer
+        // otherwise use the system organizer
         let organizerId = event.organizer!.id;
 
-        // Check if the organizer exists in profiles, if not, use admin's ID
+        // Check if the organizer exists in profiles, if not, use system organizer
         try {
           const { data: organizerProfile, error: orgCheckError } = await import('../lib/supabase').then(m => m.supabase)
             .from('profiles')
@@ -146,14 +146,36 @@ export const AdminEventHub: React.FC = () => {
             .single();
 
           if (orgCheckError || !organizerProfile) {
-            // Organizer doesn't exist, use admin's ID instead
+            // Organizer doesn't exist, use system organizer instead
+            const { data: systemOrgId, error: sysError } = await import('../lib/supabase').then(m => m.supabase)
+              .rpc('get_system_organizer');
+
+            if (!sysError && systemOrgId) {
+              organizerId = systemOrgId;
+            } else {
+              // Fallback to admin's ID if system organizer fails
+              const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
+              organizerId = user?.id || organizerId;
+            }
+          }
+        } catch (checkError) {
+          // If check fails, use system organizer
+          try {
+            const { data: systemOrgId, error: sysError } = await import('../lib/supabase').then(m => m.supabase)
+              .rpc('get_system_organizer');
+
+            if (!sysError && systemOrgId) {
+              organizerId = systemOrgId;
+            } else {
+              // Final fallback to admin's ID
+              const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
+              organizerId = user?.id || organizerId;
+            }
+          } catch (sysError) {
+            // Final fallback
             const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
             organizerId = user?.id || organizerId;
           }
-        } catch (checkError) {
-          // If check fails, use admin's ID
-          const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
-          organizerId = user?.id || organizerId;
         }
 
         // Transform event data to match createEvent expectations

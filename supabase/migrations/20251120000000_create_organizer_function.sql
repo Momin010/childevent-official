@@ -106,7 +106,39 @@ EXCEPTION
 END;
 $$;
 
--- Function for admin to create organizer profiles
+-- Create a system organizer for events when organizer doesn't exist
+-- This ensures events always have a valid organizer
+INSERT INTO profiles (
+    id,
+    username,
+    name,
+    email,
+    organization_name,
+    industry,
+    bio,
+    role,
+    is_organizer,
+    total_events_created,
+    total_attendees_served,
+    created_at,
+    updated_at
+) VALUES (
+    '00000000-0000-0000-0000-000000000001'::uuid,
+    'system_organizer',
+    'System Organizer',
+    'system@eventconnect.local',
+    'EventConnect System',
+    'Technology',
+    'System organizer for imported events',
+    'organizer',
+    true,
+    0,
+    0,
+    NOW(),
+    NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Function for admin to create organizer profiles (with proper instructions)
 CREATE OR REPLACE FUNCTION admin_create_organizer(
     p_name text,
     p_email text,
@@ -128,8 +160,13 @@ DECLARE
     v_username text;
     v_result jsonb;
 BEGIN
-    -- Check if caller is admin (you might want to check a role or specific user IDs)
-    -- For now, we'll allow any authenticated user to call this (admin check can be added later)
+    -- Check if caller is admin using our helper function
+    IF NOT is_admin_user() THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Access denied: Admin privileges required'
+        );
+    END IF;
 
     -- Check if profile already exists for this email
     IF EXISTS (SELECT 1 FROM profiles WHERE email = p_email) THEN
@@ -139,7 +176,9 @@ BEGIN
         );
     END IF;
 
-    -- Generate a new UUID for the user
+    -- Generate a new UUID for the organizer profile
+    -- NOTE: This creates a "placeholder" profile that can be claimed later
+    -- when the real user signs up with this email
     v_user_id := gen_random_uuid();
 
     -- Generate unique username
@@ -149,7 +188,7 @@ BEGIN
         v_username := LOWER(REPLACE(p_organization_name, ' ', '')) || '_' || LPAD(FLOOR(RANDOM() * 10000)::text, 4, '0');
     END LOOP;
 
-    -- Insert the organizer profile
+    -- Insert the organizer profile as a placeholder
     INSERT INTO profiles (
         id,
         username,
@@ -162,6 +201,7 @@ BEGIN
         bio,
         phone,
         location,
+        role,
         is_organizer,
         total_events_created,
         total_attendees_served,
@@ -179,6 +219,7 @@ BEGIN
         p_bio,
         p_phone,
         p_location,
+        'organizer',
         true,
         0,
         0,
@@ -186,12 +227,14 @@ BEGIN
         NOW()
     );
 
-    -- Return success
+    -- Return success with instructions
     v_result := jsonb_build_object(
         'success', true,
-        'message', 'Organizer profile created successfully',
+        'message', 'Organizer placeholder created successfully. IMPORTANT: This is NOT a real user account yet. The organizer must sign up through the normal registration process using email: ' || p_email || '. Once they sign up, their profile will be automatically linked.',
         'user_id', v_user_id,
-        'username', v_username
+        'username', v_username,
+        'requires_signup', true,
+        'signup_instructions', 'Have the organizer visit the signup page and register with email: ' || p_email
     );
 
     RETURN v_result;
@@ -202,6 +245,53 @@ EXCEPTION
             'success', false,
             'error', SQLERRM
         );
+END;
+$$;
+
+-- Function to get or create system organizer for events
+CREATE OR REPLACE FUNCTION get_system_organizer()
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_system_id uuid := '00000000-0000-0000-0000-000000000001'::uuid;
+BEGIN
+    -- Ensure system organizer exists
+    IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = v_system_id) THEN
+        INSERT INTO profiles (
+            id,
+            username,
+            name,
+            email,
+            organization_name,
+            industry,
+            bio,
+            role,
+            is_organizer,
+            total_events_created,
+            total_attendees_served,
+            created_at,
+            updated_at
+        ) VALUES (
+            v_system_id,
+            'system_organizer',
+            'System Organizer',
+            'system@eventconnect.local',
+            'EventConnect System',
+            'Technology',
+            'System organizer for imported events',
+            'organizer',
+            true,
+            0,
+            0,
+            NOW(),
+            NOW()
+        );
+    END IF;
+
+    RETURN v_system_id;
 END;
 $$;
 
