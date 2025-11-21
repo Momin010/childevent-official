@@ -133,6 +133,29 @@ export const AdminEventHub: React.FC = () => {
 
     for (const event of validEvents) {
       try {
+        // For admin-created events, use the organizer ID from JSON if it exists,
+        // otherwise use the admin's own ID as organizer
+        let organizerId = event.organizer!.id;
+
+        // Check if the organizer exists in profiles, if not, use admin's ID
+        try {
+          const { data: organizerProfile, error: orgCheckError } = await import('../lib/supabase').then(m => m.supabase)
+            .from('profiles')
+            .select('id')
+            .eq('id', organizerId)
+            .single();
+
+          if (orgCheckError || !organizerProfile) {
+            // Organizer doesn't exist, use admin's ID instead
+            const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
+            organizerId = user?.id || organizerId;
+          }
+        } catch (checkError) {
+          // If check fails, use admin's ID
+          const { data: { user } } = await import('../lib/supabase').then(m => m.supabase.auth.getUser());
+          organizerId = user?.id || organizerId;
+        }
+
         // Transform event data to match createEvent expectations
         const eventData = {
           title: event.title!,
@@ -145,7 +168,7 @@ export const AdminEventHub: React.FC = () => {
           maxAttendees: 100, // Default max attendees
           price: 0, // Default free event
           tags: [], // Default empty tags
-          organizerId: event.organizer!.id,
+          organizerId: organizerId,
         };
 
         await createEvent(eventData);

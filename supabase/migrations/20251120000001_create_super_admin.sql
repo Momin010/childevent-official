@@ -20,10 +20,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Grant execute permission
+-- Create a security definer function to check admin status without recursion
+CREATE OR REPLACE FUNCTION is_admin_user(user_uuid UUID DEFAULT auth.uid())
+RETURNS BOOLEAN AS $$
+BEGIN
+    -- Direct query to avoid RLS recursion
+    RETURN EXISTS (
+        SELECT 1 FROM profiles
+        WHERE id = user_uuid AND role = 'admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permissions
 GRANT EXECUTE ON FUNCTION is_super_admin(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION is_admin_user(UUID) TO authenticated;
 
 -- Create policies that allow super admins to bypass all restrictions
+-- Also add admin permissions for regular admin operations
 
 -- PROFILES TABLE - Super Admin Full Access
 DROP POLICY IF EXISTS "super_admin_profiles_full_access" ON profiles;
@@ -34,6 +48,15 @@ TO authenticated
 USING (is_super_admin())
 WITH CHECK (is_super_admin());
 
+-- Regular Admin permissions for profiles
+DROP POLICY IF EXISTS "admin_profiles_access" ON profiles;
+CREATE POLICY "admin_profiles_access"
+ON profiles
+FOR ALL
+TO authenticated
+USING (is_admin_user())
+WITH CHECK (is_admin_user());
+
 -- EVENTS TABLE - Super Admin Full Access
 DROP POLICY IF EXISTS "super_admin_events_full_access" ON events;
 CREATE POLICY "super_admin_events_full_access"
@@ -42,6 +65,15 @@ FOR ALL
 TO authenticated
 USING (is_super_admin())
 WITH CHECK (is_super_admin());
+
+-- Regular Admin permissions for events
+DROP POLICY IF EXISTS "admin_events_access" ON events;
+CREATE POLICY "admin_events_access"
+ON events
+FOR ALL
+TO authenticated
+USING (is_admin_user())
+WITH CHECK (true);  -- Allow any organizer_id for admins
 
 -- CATEGORIES TABLE - Super Admin Full Access
 DROP POLICY IF EXISTS "super_admin_categories_full_access" ON categories;
@@ -52,6 +84,15 @@ TO authenticated
 USING (is_super_admin())
 WITH CHECK (is_super_admin());
 
+-- Regular Admin permissions for categories
+DROP POLICY IF EXISTS "admin_categories_access" ON categories;
+CREATE POLICY "admin_categories_access"
+ON categories
+FOR ALL
+TO authenticated
+USING (is_admin_user())
+WITH CHECK (is_admin_user());
+
 -- EVENT_ATTENDEES TABLE - Super Admin Full Access
 DROP POLICY IF EXISTS "super_admin_event_attendees_full_access" ON event_attendees;
 CREATE POLICY "super_admin_event_attendees_full_access"
@@ -60,6 +101,15 @@ FOR ALL
 TO authenticated
 USING (is_super_admin())
 WITH CHECK (is_super_admin());
+
+-- Regular Admin permissions for event_attendees
+DROP POLICY IF EXISTS "admin_event_attendees_access" ON event_attendees;
+CREATE POLICY "admin_event_attendees_access"
+ON event_attendees
+FOR ALL
+TO authenticated
+USING (is_admin_user())
+WITH CHECK (is_admin_user());
 
 -- EVENT_COMMENTS TABLE - Super Admin Full Access
 DROP POLICY IF EXISTS "super_admin_event_comments_full_access" ON event_comments;
