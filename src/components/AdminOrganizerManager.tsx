@@ -105,75 +105,45 @@ export const AdminOrganizerManager: React.FC = () => {
         return;
       }
 
-      // Get current admin session before creating organizer
-      const { data: { session: adminSession } } = await supabase.auth.getSession();
-      const adminUserId = adminSession?.user?.id;
-
       // Generate unique username first
       const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
 
-      // Create the organizer through the signup process (same as normal users)
-      // This creates a REAL auth user that can log in immediately
-      const { data: signupData, error: signupError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            name: formData.name,
-            organization_name: formData.organizationName,
-            is_organizer: true,
-          },
+      // Create organizer via Vercel serverless function (no session conflicts!)
+      const response = await fetch('/api/create-organizer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      });
-
-      if (signupError) throw signupError;
-
-      // Wait a moment for the auth user to be created
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Get the user ID from the signup response
-      const userId = signupData.user?.id;
-      if (!userId) {
-        throw new Error('Failed to create auth user');
-      }
-
-      // Create the organizer profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
           username,
           name: formData.name,
-          email: formData.email,
-          organization_name: formData.organizationName,
+          organizationName: formData.organizationName,
           industry: formData.industry,
           website: formData.website || null,
-          role_in_organization: formData.roleInOrganization || null,
+          roleInOrganization: formData.roleInOrganization || null,
           bio: formData.bio || null,
           phone: formData.phone || null,
           location: formData.location || null,
-          role: 'organizer',
-          is_organizer: true,
-          total_events_created: 0,
-          total_attendees_served: 0,
-        })
-        .select()
-        .single();
+        }),
+      });
 
-      if (profileError) throw profileError;
+      const result = await response.json();
 
-      // Check if admin session changed (they might get signed in as the new organizer)
-      if (adminUserId) {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (currentSession?.user?.id !== adminUserId) {
-          console.log('⚠️ Admin session changed! Admin was signed in as the new organizer user.');
-          console.log('Admin should refresh the page to return to admin session.');
-        }
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create organizer');
       }
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create organizer');
+      }
+
+      const userId = result.userId;
 
       setCreationResult({
         success: true,
-        message: `🎉 Organizer "${formData.organizationName}" created successfully!\n\n✅ REAL Supabase auth user created\n📧 Email: ${formData.email}\n🔑 Password: ${formData.password}\n🆔 User ID: ${userId}\n\nThe organizer can log in immediately with these credentials. If you don't see this message, try refreshing the page.`,
+        message: `🎉 Organizer "${formData.organizationName}" created successfully!\n\n✅ REAL Supabase auth user created with admin privileges\n📧 Email: ${formData.email}\n🔑 Password: ${formData.password}\n🆔 User ID: ${userId}\n\nThe organizer can log in immediately with these credentials and has full access to create events.`,
         organizerId: userId
       });
 
@@ -445,11 +415,12 @@ export const AdminOrganizerManager: React.FC = () => {
         <div className="flex items-start">
           <CheckCircle className="w-5 h-5 text-green-600 mr-2 mt-0.5" />
           <div>
-            <h5 className="text-sm font-medium text-green-900 mb-1">✅ REAL Organizer Creation</h5>
+            <h5 className="text-sm font-medium text-green-900 mb-1">✅ SERVERLESS Organizer Creation</h5>
             <ul className="text-sm text-green-800 space-y-1">
-              <li>• <strong>FULLY FUNCTIONAL:</strong> Creates complete Supabase auth users with immediate login access</li>
-              <li>• <strong>SAME AS USER SIGNUP:</strong> Uses identical process to normal organizer registration</li>
-              <li>• <strong>COMPLETE PROFILES:</strong> Includes all organizer details and contact information</li>
+              <li>• <strong>SERVER-SIDE PROCESSING:</strong> Uses Vercel serverless function with admin privileges</li>
+              <li>• <strong>NO SESSION CONFLICTS:</strong> Admin stays logged in, no page reloads</li>
+              <li>• <strong>COMPLETE AUTH USERS:</strong> Creates real Supabase auth users with immediate login access</li>
+              <li>• <strong>FULL PROFILES:</strong> Includes all organizer details and contact information</li>
               <li>• <strong>IMMEDIATE ACCESS:</strong> Organizers can log in right away with provided credentials</li>
               <li>• <strong>VISIBLE IN AUTH:</strong> Real users appear in Supabase Authentication dashboard</li>
             </ul>
