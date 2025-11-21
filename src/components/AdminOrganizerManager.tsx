@@ -108,13 +108,9 @@ export const AdminOrganizerManager: React.FC = () => {
       // Generate unique username first
       const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
 
-      // Create organizer via Vercel serverless function (no session conflicts!)
-      const response = await fetch('/api/create-organizer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Create organizer via Supabase Edge Function (server-side processing, no session conflicts!)
+      const { data: result, error: functionError } = await supabase.functions.invoke('create-organizer', {
+        body: {
           email: formData.email,
           password: formData.password,
           username,
@@ -126,17 +122,16 @@ export const AdminOrganizerManager: React.FC = () => {
           bio: formData.bio || null,
           phone: formData.phone || null,
           location: formData.location || null,
-        }),
+        }
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create organizer');
+      if (functionError) {
+        console.error('Edge function error:', functionError);
+        throw new Error(`Function error: ${functionError.message}`);
       }
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to create organizer');
+      if (!result?.success) {
+        throw new Error(result?.error || 'Failed to create organizer');
       }
 
       const userId = result.userId;
@@ -415,14 +410,15 @@ export const AdminOrganizerManager: React.FC = () => {
         <div className="flex items-start">
           <CheckCircle className="w-5 h-5 text-green-600 mr-2 mt-0.5" />
           <div>
-            <h5 className="text-sm font-medium text-green-900 mb-1">✅ SERVERLESS Organizer Creation</h5>
+            <h5 className="text-sm font-medium text-green-900 mb-1">✅ EDGE FUNCTION Organizer Creation</h5>
             <ul className="text-sm text-green-800 space-y-1">
-              <li>• <strong>SERVER-SIDE PROCESSING:</strong> Uses Vercel serverless function with admin privileges</li>
+              <li>• <strong>SERVER-SIDE PROCESSING:</strong> Uses Supabase Edge Function with admin privileges</li>
               <li>• <strong>NO SESSION CONFLICTS:</strong> Admin stays logged in, no page reloads</li>
               <li>• <strong>COMPLETE AUTH USERS:</strong> Creates real Supabase auth users with immediate login access</li>
               <li>• <strong>FULL PROFILES:</strong> Includes all organizer details and contact information</li>
               <li>• <strong>IMMEDIATE ACCESS:</strong> Organizers can log in right away with provided credentials</li>
               <li>• <strong>VISIBLE IN AUTH:</strong> Real users appear in Supabase Authentication dashboard</li>
+              <li>• <strong>DEPLOYMENT NEEDED:</strong> Run: <code>supabase functions deploy create-organizer</code></li>
             </ul>
           </div>
         </div>
