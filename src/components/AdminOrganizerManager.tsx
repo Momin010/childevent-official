@@ -105,9 +105,6 @@ export const AdminOrganizerManager: React.FC = () => {
         return;
       }
 
-      // Generate unique username
-      const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
-
       // Create the organizer through the signup process (same as normal users)
       // This creates a REAL auth user that can log in immediately
       const { data: signupData, error: signupError } = await supabase.auth.signUp({
@@ -160,11 +157,6 @@ export const AdminOrganizerManager: React.FC = () => {
         .single();
 
       if (profileError) throw profileError;
-
-      if (error) throw error;
-      if (!result?.success) {
-        throw new Error(result?.error || 'Failed to create organizer profile');
-      }
 
       setCreationResult({
         success: true,
