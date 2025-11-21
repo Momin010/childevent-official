@@ -105,6 +105,13 @@ export const AdminOrganizerManager: React.FC = () => {
         return;
       }
 
+      // Get current admin session before creating organizer
+      const { data: { session: adminSession } } = await supabase.auth.getSession();
+      const adminUserId = adminSession?.user?.id;
+
+      // Generate unique username first
+      const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
+
       // Create the organizer through the signup process (same as normal users)
       // This creates a REAL auth user that can log in immediately
       const { data: signupData, error: signupError } = await supabase.auth.signUp({
@@ -122,16 +129,13 @@ export const AdminOrganizerManager: React.FC = () => {
       if (signupError) throw signupError;
 
       // Wait a moment for the auth user to be created
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Get the user ID from the signup response
       const userId = signupData.user?.id;
       if (!userId) {
         throw new Error('Failed to create auth user');
       }
-
-      // Generate unique username
-      const username = await import('../lib/auth').then(m => m.generateUniqueUsername(formData.organizationName));
 
       // Create the organizer profile
       const { data: profileData, error: profileError } = await supabase
@@ -158,9 +162,18 @@ export const AdminOrganizerManager: React.FC = () => {
 
       if (profileError) throw profileError;
 
+      // Check if admin session changed (they might get signed in as the new organizer)
+      if (adminUserId) {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession?.user?.id !== adminUserId) {
+          console.log('⚠️ Admin session changed! Admin was signed in as the new organizer user.');
+          console.log('Admin should refresh the page to return to admin session.');
+        }
+      }
+
       setCreationResult({
         success: true,
-        message: `Organizer created successfully! ✅ REAL user account created with login access. Email: ${formData.email}, Password: ${formData.password}. The organizer can log in immediately and complete their profile setup.`,
+        message: `🎉 Organizer "${formData.organizationName}" created successfully!\n\n✅ REAL Supabase auth user created\n📧 Email: ${formData.email}\n🔑 Password: ${formData.password}\n🆔 User ID: ${userId}\n\nThe organizer can log in immediately with these credentials. If you don't see this message, try refreshing the page.`,
         organizerId: userId
       });
 
